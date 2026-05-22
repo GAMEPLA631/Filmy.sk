@@ -853,45 +853,24 @@ function handleFileSelect(event) {
     document.getElementById("file-format-badge").innerText = ext.toUpperCase();
     document.getElementById("active-codec-badge").innerText = ext.toUpperCase();
 
-    const nativeFormats = ['mp4', 'webm', 'ogg', 'mp3']; // MP3 prehrávané tiež s vizuálnou podporou
+    // Vypnutie dekodéra simulácie – načítanie VŠETKÝCH videí priamo do skutočného HTML5 video elementu
+    isDecoderActive = false;
+    document.getElementById("decoder-overlay").classList.add("hidden");
+    video.classList.remove("hidden");
     
-    if (nativeFormats.includes(ext)) {
-        // Natívne prehrávanie videa v prehliadači
-        isDecoderActive = false;
-        document.getElementById("decoder-overlay").classList.add("hidden");
-        video.classList.remove("hidden");
-        
-        // Odstránenie starého plátna
-        const existingCanvas = document.getElementById("procedural-canvas");
-        if (existingCanvas) existingCanvas.remove();
-        
-        video.src = URL.createObjectURL(file);
-        
-        video.onloadedmetadata = () => {
-            customVideoDuration = video.duration || 180; // fallback pre kratšie súbory
-            document.getElementById("custom-controls").classList.remove("hidden");
-            logAIGuard(`[PREHRÁVAČ] Načítané video: "${formattedMovieName}". Monitorujem autorské práva na zvukovú stopu a explicitný vizuál.`);
-            playVideo();
-        };
-    } else {
-        // MKV, AVI, FLV atď. - Okamžitá emulácia a renderovanie reálneho filmového obsahu
-        isDecoderActive = true;
-        video.classList.add("hidden");
-        document.getElementById("decoder-overlay").classList.add("hidden"); // Skryjeme zdržujúci text o dekódovaní
-        
-        // Odstránenie starého plátna
-        const existingCanvas = document.getElementById("procedural-canvas");
-        if (existingCanvas) existingCanvas.remove();
-
-        // Vytvorenie dĺžky filmu pre timeline
-        customVideoDuration = 7200; // 2 hodiny pre emuláciu
-        customVideoCurrentTime = 0;
+    // Odstránenie starého procedurálneho plátna ak existovalo
+    const existingCanvas = document.getElementById("procedural-canvas");
+    if (existingCanvas) existingCanvas.remove();
+    
+    // Naviažeme reálny lokálny súbor z počítača do video prehrávača
+    video.src = URL.createObjectURL(file);
+    
+    video.onloadedmetadata = () => {
+        customVideoDuration = video.duration || 180; // Fallback pre nezvyčajné súbory
         document.getElementById("custom-controls").classList.remove("hidden");
-
-        logAIGuard(`[PREHRÁVAČ] Okamžite rozpoznaný formát filmu: "${formattedMovieName}" (${ext.toUpperCase()}). Aktivujem kognitívny emulovaný video procesor.`);
-        runDecoderSimulation();
+        logAIGuard(`[PREHRÁVAČ] Úspešne načítané reálne video zo zariadenia: "${formattedMovieName}". Monitorujem autorské práva a nevhodný obsah.`);
         playVideo();
-    }
+    };
 }
 
 function fallbackToDecoder() {
@@ -903,7 +882,7 @@ function fallbackToDecoder() {
     const ext = currentLoadedFile ? currentLoadedFile.name.split('.').pop().toLowerCase() : "unsupported";
     document.getElementById("unsupported-ext").innerText = ext.toUpperCase();
     
-    logAIGuard(`[DEKODÉR] Aktivujem záložné plynulé Kortex filmové plátno.`);
+    logAIGuard(`[DEKODÉR] Spúšťam záložné emulované filmové plátno kvôli chybe natívneho dekodéra.`);
     runDecoderSimulation();
 }
 
@@ -1109,7 +1088,7 @@ async function triggerAIScan() {
 
         setTimeout(() => {
             if (isCopyrightActive && copyrightMusicKeywords.some(keyword => filename.includes(keyword))) {
-                blockVideoByAI("Detekovaný Copyright Strike vo videu: Tento video stream obsahuje chránenú komerčnú hudobnú nahrávku vo zvukovej stope bez riadneho vysporiadania práv s autorským zväzom.", "copyright");
+                blockVideoByAI("Detekovaný Copyright Strike vo videu: Tento video stream obsahuje chránenú komerčnú hudbu vo zvukovej stope bez riadneho vysporiadania práv.", "copyright");
             } else if (isModerationActive && extremeViolentKeywords.some(keyword => filename.includes(keyword))) {
                 blockVideoByAI("Detekované závažné narušenie podmienok platformy: Video stream obsahuje reálne alebo extrémne explicitné gore scény a ohrozuje bezpečnosť komunity.", "violence");
             } else if (isModerationActive && mildViolentKeywords.some(keyword => filename.includes(keyword))) {
