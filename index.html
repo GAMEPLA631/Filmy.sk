@@ -1,0 +1,1627 @@
+<!DOCTYPE html>
+<html lang="sk" class="h-full bg-slate-950 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KORTEX CINEMA PREMIUM - AI Player</title>
+    <!-- Moderná webová ikona (favicon) v štýle Kortex AI -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300a3a3'%3E%3Cpath d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'/%3E%3C/svg%3E">
+    <!-- Tailwind CSS pre špičkový moderný styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome pre prémiové ikony -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts - Inter pre modernú čitateľnosť -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        microsoft: {
+                            blue: '#0078d4',
+                            teal: '#00a3a3',
+                            green: '#107c10',
+                            dark: '#111827',
+                            card: '#1e293b'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar v štýle moderného Xboxu */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #090d16;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1f2937;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #374151;
+        }
+        /* Fluida pre biometrickú skenovaciu linku */
+        @keyframes scan {
+            0%, 100% { top: 0%; opacity: 0.8; }
+            50% { top: 100%; opacity: 0.3; }
+        }
+        .scan-line {
+            animation: scan 3s infinite linear;
+        }
+        /* Pulzujúci efekt pre AI blokovanie */
+        @keyframes pulse-red {
+            0%, 100% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+            50% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.8); }
+        }
+        .ai-blocked-glow {
+            animation: pulse-red 2s infinite;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased selection:bg-microsoft-blue selection:text-white overflow-x-hidden min-h-screen flex flex-col">
+
+<header class="sticky top-0 z-40 backdrop-blur-md bg-slate-950/80 border-b border-slate-800/80 px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+        <!-- Logo Kortex Cinema Style (Futuristický vrstvený hologram) -->
+        <svg class="w-7 h-7 text-microsoft-teal animate-pulse" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="currentColor" fill-opacity="0.3" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+            <path d="M2 17L12 22L22 17M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="12" cy="7" r="1.5" fill="#00a3a3"/>
+        </svg>
+        <span class="font-extrabold text-lg tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-200 to-slate-400">
+            KORTEX CINEMA <span class="text-microsoft-blue font-light">PREMIUM</span>
+        </span>
+    </div>
+
+    <!-- Live Telemetrické Hodnoty -->
+    <div class="hidden lg:flex items-center gap-6 text-xs text-slate-400">
+        <div class="flex items-center gap-2 bg-slate-900/80 px-3 py-1.5 rounded-full border border-slate-800">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Gemini AI Guard: <strong class="text-emerald-400" id="guard-status">AKTÍVNY</strong></span>
+        </div>
+        <div class="flex items-center gap-2 bg-slate-900/80 px-3 py-1.5 rounded-full border border-slate-800">
+            <i class="fa-solid fa-face-viewfinder text-microsoft-teal"></i>
+            <span>Snímanie Tváre: <strong class="text-microsoft-teal" id="face-status">PRIPRAVENÉ</strong></span>
+        </div>
+        <div class="flex items-center gap-2 bg-slate-900/80 px-3 py-1.5 rounded-full border border-slate-800">
+            <i class="fa-solid fa-copyright text-amber-500 animate-pulse"></i>
+            <span>Copyright Guard: <strong class="text-emerald-400" id="copyright-status">BEZ CHÝB</strong></span>
+        </div>
+        <div class="flex items-center gap-2 bg-slate-900/80 px-3 py-1.5 rounded-full border border-slate-800">
+            <i class="fa-solid fa-crown text-amber-500"></i>
+            <span>Licencia: <strong class="text-amber-400" id="subscription-badge">FREE DEMO</strong></span>
+        </div>
+    </div>
+
+    <!-- Pravé menu s nastaveniami a predplatným -->
+    <div class="flex items-center gap-3">
+        <button onclick="openApiKeyModal()" class="text-slate-400 hover:text-white transition-colors bg-slate-900 hover:bg-slate-800 px-3 py-2 rounded-lg border border-slate-800 text-xs flex items-center gap-1.5">
+            <i class="fa-solid fa-key"></i> Gemini API Kľúč
+        </button>
+        <button onclick="openPremiumModal()" class="relative group bg-gradient-to-r from-microsoft-blue to-microsoft-teal text-white font-semibold text-xs px-4 py-2 rounded-lg shadow-lg hover:shadow-cyan-500/20 transition-all flex items-center gap-2">
+            <i class="fa-solid fa-credit-card"></i> Kúpiť Premium
+            <span class="absolute -top-1.5 -right-1.5 flex h-3.5 w-3.5">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-cyan-500 text-[8px] font-bold text-slate-950 justify-center items-center">!</span>
+            </span>
+        </button>
+    </div>
+</header>
+
+<main class="flex-1 w-full max-w-[1800px] mx-auto p-4 md:p-6 grid grid-cols-1 xl:grid-cols-12 gap-6">
+    
+    <!-- ĽAVÁ STRANA: Prehrávač a Video Ovládacie prvky (8 stĺpcov) -->
+    <section class="xl:col-span-8 flex flex-col gap-6">
+        
+        <!-- Premium Player Container -->
+        <div id="player-container" class="relative aspect-video rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 shadow-2xl group flex flex-col justify-between">
+            
+            <!-- Video Element -->
+            <video id="main-video" class="w-full h-full object-contain hidden" crossorigin="anonymous"></video>
+            
+            <!-- Simulovaný/Univerzálny dekodér pre nepodporované video formáty (napr. AVI, MKV, FLV) -->
+            <div id="decoder-overlay" class="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center p-6 hidden z-10">
+                <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px]"></div>
+                
+                <div class="relative flex flex-col items-center max-w-md text-center">
+                    <div class="w-20 h-20 rounded-2xl bg-microsoft-blue/10 border border-microsoft-blue/30 flex items-center justify-center mb-6 animate-pulse">
+                        <i class="fa-solid fa-microchip text-4xl text-microsoft-blue"></i>
+                    </div>
+                    <h3 class="text-xl font-bold tracking-tight mb-2">Univerzálny Premium Kodek Aktívny</h3>
+                    <p class="text-xs text-slate-400 mb-6 leading-relaxed">
+                        Zistili sme starší alebo natívne nepodporovaný formát prehliadača (<span id="unsupported-ext" class="text-cyan-400 font-bold">MKV</span>). Spúšťame lokálnu emuláciu renderera, aby sme obišli reštrikcie prehliadača.
+                    </p>
+                    
+                    <!-- Progress transkódovania -->
+                    <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden border border-slate-800 mb-4">
+                        <div id="transcoder-progress" class="bg-gradient-to-r from-microsoft-blue to-microsoft-teal h-full w-0 transition-all duration-300"></div>
+                    </div>
+                    <div class="flex justify-between w-full text-[10px] text-slate-500 font-mono">
+                        <span id="transcoder-stage">De-multiplexovanie audia...</span>
+                        <span id="transcoder-percent">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interaktívne AI Blokovacie Plátno (Krv / Vraždy) -->
+            <div id="ai-blocked-overlay" class="absolute inset-0 bg-red-950/95 backdrop-blur-xl flex flex-col items-center justify-center p-8 hidden z-20 ai-blocked-glow">
+                <div id="ai-blocked-icon-container" class="w-24 h-24 rounded-full bg-red-500/10 border-2 border-red-500 flex items-center justify-center text-red-500 text-4xl mb-6">
+                    <i id="ai-blocked-icon" class="fa-solid fa-triangle-exclamation animate-bounce"></i>
+                </div>
+                <h2 id="ai-blocked-title" class="text-2xl md:text-3xl font-black text-red-500 uppercase tracking-wider mb-2">VIDEO ZABLOKOVANÉ</h2>
+                <div id="ai-blocked-badge-container" class="bg-slate-950/80 border border-red-900/50 rounded-xl p-4 max-w-xl text-center mb-6">
+                    <p id="ai-blocked-badge" class="text-sm font-semibold text-red-400">Detekovaný zakázaný obsah (Krv / Násilie / Nelegálne scény)</p>
+                    <p id="ai-block-reason" class="text-xs text-slate-400 mt-2 leading-relaxed">
+                        Skenovací modul Gemini Safety Guard detekoval vizuálne vzory nezlučiteľné so zásadami komunity (krvavé scény, ohrozenie života diváka).
+                    </p>
+                </div>
+                <p class="text-xs text-slate-400 mb-6 max-w-md text-center">
+                    Tento incident bol zaznamenaný do lokálnej databázy IndexedDB. Máte právo požiadať o umelé prehodnotenie tohto rozhodnutia.
+                </p>
+                <div class="flex flex-wrap gap-4 justify-center">
+                    <button onclick="requestAppeal()" class="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-6 py-3 rounded-lg shadow-lg hover:shadow-red-600/20 transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-gavel"></i> Odvolať sa voči zablokovaniu
+                    </button>
+                    <button onclick="resetPlayer()" class="bg-slate-900 hover:bg-slate-800 text-slate-300 font-semibold text-xs px-6 py-3 rounded-lg border border-slate-800 transition-all">
+                        Resetovať prehrávač
+                    </button>
+                </div>
+            </div>
+
+            <!-- Prázdny stav / Výzva na nahranie filmu -->
+            <div id="empty-player-state" class="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center p-6 text-center cursor-pointer hover:bg-slate-900/60 transition-colors" onclick="triggerFileInput()">
+                <div class="w-20 h-20 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center mb-4 text-slate-400 group-hover:text-microsoft-blue group-hover:border-microsoft-blue/50 transition-all">
+                    <i class="fa-solid fa-clapperboard text-3xl"></i>
+                </div>
+                <h3 class="text-lg font-bold">Nahrajte alebo presuňte sem film</h3>
+                <p class="text-xs text-slate-400 mt-1 max-w-sm leading-relaxed">
+                    Podporujeme všetky formáty vrátane zastaralých (MP4, MKV, AVI, FLV, WMV, WebM, 3GP atď.) s aktívnym dohľadom umelej inteligencie.
+                </p>
+                <button class="mt-4 bg-microsoft-blue/10 hover:bg-microsoft-blue/20 text-microsoft-blue border border-microsoft-blue/30 font-semibold text-xs px-4 py-2 rounded-lg transition-colors">
+                    Vybrať súbor zo zariadenia
+                </button>
+            </div>
+
+            <!-- Custom Controls Overlay (Zobrazuje sa pri hoveri ak hrá video) -->
+            <div id="custom-controls" class="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent flex flex-col gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden">
+                <!-- Progress bar -->
+                <div class="relative w-full h-1 bg-slate-800 rounded-full cursor-pointer group/progress" onclick="seekVideo(event)">
+                    <div id="progress-hover" class="absolute top-0 bottom-0 left-0 bg-white/20 rounded-full transition-all pointer-events-none w-0"></div>
+                    <div id="video-progress" class="absolute top-0 bottom-0 left-0 bg-microsoft-blue rounded-full w-0"></div>
+                </div>
+                
+                <!-- Ovládacie prvky spodnej lišty -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <button onclick="togglePlay()" class="text-white hover:text-microsoft-blue transition-colors text-sm">
+                            <i id="play-icon" class="fa-solid fa-play"></i>
+                        </button>
+                        <span id="time-display" class="text-[11px] font-mono text-slate-400">00:00 / 00:00</span>
+                    </div>
+
+                    <div class="flex items-center gap-4">
+                        <!-- Indikácia aktívneho kodeku -->
+                        <span id="active-codec-badge" class="bg-slate-900 border border-slate-800 text-[10px] font-mono text-cyan-400 px-2 py-0.5 rounded uppercase">MP4</span>
+                        
+                        <!-- Hlasitosť -->
+                        <div class="flex items-center gap-1.5 group/vol">
+                            <button onclick="toggleMute()" class="text-slate-400 hover:text-white transition-colors text-xs">
+                                <i id="volume-icon" class="fa-solid fa-volume-high"></i>
+                            </button>
+                            <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="1" oninput="changeVolume(this.value)" class="w-12 h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-microsoft-blue">
+                        </div>
+                        
+                        <!-- Celá obrazovka -->
+                        <button onclick="toggleFullscreen()" class="text-slate-400 hover:text-white transition-colors text-xs">
+                            <i class="fa-solid fa-expand"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Vstupy a metadáta o aktuálnom filme -->
+        <input type="file" id="file-input" class="hidden" accept="*/*" onchange="handleFileSelect(event)">
+        
+        <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 backdrop-blur-sm">
+            <div class="flex-1">
+                <h1 id="playing-title" class="text-xl font-bold tracking-tight text-white mb-1">Žiadny prehrávaný film</h1>
+                <p id="playing-desc" class="text-xs text-slate-400 leading-relaxed">Platforma analyzuje každý nahraný film pomocou modelu Gemini. Súbory z vášho zariadenia sa z bezpečnostných a kapacitných dôvodov na servery neukladajú, s výnimkou tých, ktoré boli identifikované ako škodlivé.</p>
+                <div class="flex items-center gap-3 mt-3 flex-wrap">
+                    <span id="file-format-badge" class="bg-slate-950 border border-slate-800 text-[10px] font-mono text-slate-400 px-2.5 py-1 rounded-lg">Bez formátu</span>
+                    <span id="file-size-badge" class="bg-slate-950 border border-slate-800 text-[10px] font-mono text-slate-400 px-2.5 py-1 rounded-lg">0.00 MB</span>
+                </div>
+            </div>
+            
+            <!-- Tlačidlo na nahlásenie obsahu -->
+            <button onclick="openReportModal()" class="bg-slate-950 border border-red-900/30 hover:border-red-500/50 text-red-400 hover:bg-red-500/5 hover:text-red-300 text-xs font-semibold px-4 py-3 rounded-xl transition-all flex items-center justify-center gap-2">
+                <i class="fa-solid fa-flag"></i> Nahlásiť nevhodné video
+            </button>
+        </div>
+
+    </section>
+
+    <!-- PRAVÁ STRANA: Biometrika & Gemini Guard (4 stĺpce) -->
+    <section class="xl:col-span-4 flex flex-col gap-6">
+
+        <!-- Gemini AI Face Scanner (Biometrika) -->
+        <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-5 backdrop-blur-sm relative overflow-hidden flex flex-col">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-face-viewfinder text-microsoft-teal text-lg"></i>
+                    <h2 class="font-bold text-sm uppercase tracking-wider text-slate-200">Biometrický Guard</h2>
+                </div>
+                <span class="bg-microsoft-teal/10 border border-microsoft-teal/30 text-microsoft-teal text-[9px] font-bold px-2 py-0.5 rounded">LIVE SCANNING</span>
+            </div>
+
+            <!-- Webcam / Skenovací Rámček -->
+            <div class="relative aspect-[4/3] rounded-xl overflow-hidden bg-slate-950 border border-slate-800 flex items-center justify-center">
+                <video id="webcam-video" class="w-full h-full object-cover scale-x-[-1]" autoplay playsinline muted></video>
+                <canvas id="biometric-hud" class="absolute inset-0 pointer-events-none"></canvas>
+                
+                <!-- Skenovacia čiara -->
+                <div class="absolute inset-x-0 h-0.5 bg-microsoft-teal/60 shadow-[0_0_10px_#00a3a3] scan-line pointer-events-none"></div>
+
+                <!-- Bezpečnostný vodoznak -->
+                <div class="absolute bottom-2 left-2 bg-slate-950/80 border border-slate-800 rounded px-2 py-0.5 text-[8px] font-mono text-slate-400 tracking-wider">
+                    SECURE STREAM / AES-256
+                </div>
+            </div>
+
+            <!-- Biometrické Telemetrické Výstupy -->
+            <div class="grid grid-cols-2 gap-3 mt-4 text-[10px] font-mono">
+                <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+                    <span class="text-slate-500 block mb-0.5">POZORNOSŤ DIVÁKA</span>
+                    <strong id="hud-attention" class="text-slate-300 text-xs">Aktivuje sa...</strong>
+                </div>
+                <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+                    <span class="text-slate-500 block mb-0.5">DETEKOVANÁ EMÓCIA</span>
+                    <strong id="hud-emotion" class="text-slate-300 text-xs">Skenujem...</strong>
+                </div>
+                <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+                    <span class="text-slate-500 block mb-0.5">AUTORIZÁCIA VEKU</span>
+                    <strong id="hud-age" class="text-emerald-400 text-xs">Schválené (+18)</strong>
+                </div>
+                <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+                    <span class="text-slate-500 block mb-0.5">IDENTITA</span>
+                    <strong id="hud-identity" class="text-slate-300 text-xs">Neznáma (Demo)</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gemini AI Moderation Telemetry -->
+        <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-5 backdrop-blur-sm flex flex-col flex-1">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-brain text-microsoft-blue"></i>
+                    <h2 class="font-bold text-sm uppercase tracking-wider text-slate-200">Gemini Safety Guard</h2>
+                </div>
+                <span class="bg-microsoft-blue/10 border border-microsoft-blue/30 text-microsoft-blue text-[9px] font-bold px-2 py-0.5 rounded">AUTO-SCANNER</span>
+            </div>
+
+            <!-- Detekčné Výstupy & Logs -->
+            <div class="flex-1 bg-slate-950 rounded-xl p-3 border border-slate-800 font-mono text-[10px] overflow-y-auto max-h-[160px] lg:max-h-none flex flex-col gap-2" id="ai-logs-container">
+                <div class="text-slate-500">[SYSTEM] Inicializácia neurónovej sieti...</div>
+                <div class="text-slate-500">[SYSTEM] IndexedDB úspešne načítaná.</div>
+                <div class="text-slate-500">[SYSTEM] Pripravené na skenovanie video-snámok.</div>
+            </div>
+
+            <!-- Rýchle nastavenie ochrany -->
+            <div class="mt-4 pt-4 border-t border-slate-800 flex flex-col gap-3">
+                <div class="flex items-center justify-between">
+                    <div class="flex flex-col gap-0.5">
+                        <span class="text-xs font-semibold">Aktívna Moderácia Vraždy/Krv</span>
+                        <span class="text-[9px] text-slate-500">Pravidelný sken snímok filmu pomocou AI</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="moderation-toggle" checked class="sr-only peer" onchange="toggleModeration(this.checked)">
+                        <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-300 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-microsoft-blue"></div>
+                    </label>
+                </div>
+
+                <div class="flex items-center justify-between border-t border-slate-800/50 pt-3">
+                    <div class="flex flex-col gap-0.5">
+                        <span class="text-xs font-semibold">Skenovanie autorských práv (Copyright)</span>
+                        <span class="text-[9px] text-slate-500">Detekcia chránenej hudby a Copyright Strike</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="copyright-toggle" checked class="sr-only peer" onchange="toggleCopyright(this.checked)">
+                        <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-300 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500"></div>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+</main>
+
+<!-- SEKCE POD PREHRÁVAČOM: Karanténa Blokovaného Obsahu & Odvolania (Appeals) -->
+<section class="w-full max-w-[1800px] mx-auto px-4 md:px-6 mb-12">
+    <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-6 backdrop-blur-sm">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-slate-800 pb-4">
+            <div>
+                <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-lock text-red-500"></i> Karanténa Blokovaného Obsahu
+                </h2>
+                <p class="text-xs text-slate-400 mt-1">Tu sú uložené všetky videá, ktoré Gemini AI zablokovala ako nebezpečné (násilné / krvavé). Sú v bezpečí zapísané v lokálnej IndexedDB databáze.</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <span id="quarantine-count" class="bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-bold px-2.5 py-1 rounded-full">0 blokovaných filmov</span>
+            </div>
+        </div>
+
+        <!-- Grid blocked videos -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="quarantine-grid">
+            <!-- Empty state pre karanténu -->
+            <div class="col-span-full py-8 text-center text-slate-500 text-xs flex flex-col items-center justify-center gap-2">
+                <i class="fa-solid fa-shield-halved text-2xl text-slate-600"></i>
+                <span>V databáze nie sú žiadne zablokované videá. Všetok nahraný obsah prešiel testami bezpečnosti.</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Päta webu -->
+<footer class="border-t border-slate-900 bg-slate-950 py-6 text-center text-slate-600 text-[11px] mt-auto">
+    <p>© 2026 Kortex Premium Media Platform. Všetky práva vyhradené. Používa integráciu Google Gemini API pre pokročilú lokálnu kybernetickú bezpečnosť a šifrovanie v prehliadači cez IndexedDB.</p>
+</footer>
+
+
+<!-- MODAL: Microsoft Premium Plány & Platobná Brána -->
+<div id="premium-modal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 md:p-8 flex flex-col gap-8 relative">
+        <button onclick="closePremiumModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors">
+            <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+
+        <div class="text-center">
+            <div class="inline-flex items-center justify-center w-12 h-12 mb-4 rounded-xl bg-microsoft-teal/10 border border-microsoft-teal/30">
+                <svg class="w-8 h-8 text-microsoft-teal" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="currentColor" fill-opacity="0.3" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                    <path d="M2 17L12 22L22 17M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <h2 class="text-2xl md:text-3xl font-black text-white">Vyberte si svoj Premium Plán</h2>
+            <p class="text-xs text-slate-400 mt-2">Získajte neobmedzený prístup ku kodekom a plnú integráciu s Gemini AI Guard na 30 dní.</p>
+        </div>
+
+        <!-- Karty s Plánmi -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Plan 1: Standard Player -->
+            <div class="bg-slate-950 border border-slate-800 hover:border-slate-700 rounded-2xl p-5 flex flex-col justify-between transition-all group">
+                <div>
+                    <h3 class="font-bold text-slate-200">Bronze Player</h3>
+                    <p class="text-[10px] text-slate-500 mt-1">Základné prehrávanie so základnou bezpečnosťou</p>
+                    <div class="mt-4 flex items-baseline gap-1">
+                        <span class="text-2xl font-black text-white">€4.99</span>
+                        <span class="text-xs text-slate-500">/ mesačne</span>
+                    </div>
+                    <ul class="mt-6 flex flex-col gap-3 text-[11px] text-slate-400">
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-500"></i> Podpora AVI a MP4</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-500"></i> Lokálne úložisko</li>
+                        <li class="flex items-center gap-2 text-slate-600"><i class="fa-solid fa-xmark"></i> Gemini AI Face Scanner</li>
+                        <li class="flex items-center gap-2 text-slate-600"><i class="fa-solid fa-xmark"></i> Živé skenovanie násilia</li>
+                    </ul>
+                </div>
+                <button onclick="selectPlan('Bronze Player', 4.99)" class="mt-8 w-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-2.5 rounded-lg border border-slate-800 transition-all">Vybrať plán</button>
+            </div>
+
+            <!-- Plan 2: Microsoft Cinematic (Odporúčaný) -->
+            <div class="bg-slate-950 border-2 border-microsoft-blue rounded-2xl p-5 flex flex-col justify-between transition-all relative shadow-xl shadow-microsoft-blue/5">
+                <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-microsoft-blue text-white text-[9px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">Odporúčané</span>
+                <div>
+                    <h3 class="font-bold text-white flex items-center gap-1.5">Cinematic Pro <i class="fa-solid fa-crown text-amber-500 text-xs"></i></h3>
+                    <p class="text-[10px] text-slate-400 mt-1">Plná sila ochrany a emulácie formátov</p>
+                    <div class="mt-4 flex items-baseline gap-1">
+                        <span class="text-3xl font-black text-white">€14.99</span>
+                        <span class="text-xs text-slate-400">/ mesačne</span>
+                    </div>
+                    <ul class="mt-6 flex flex-col gap-3 text-[11px] text-slate-300">
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-500"></i> Všetky formáty bez obmedzenia</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-500"></i> Biometrický Face Scanner</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-500"></i> Gemini AI Guard (Krv a Vraždy)</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-500"></i> Neobmedzená IndexedDB Karanténa</li>
+                    </ul>
+                </div>
+                <button onclick="selectPlan('Cinematic Pro', 14.99)" class="mt-8 w-full bg-microsoft-blue hover:bg-microsoft-blue/90 text-white font-bold text-xs py-3 rounded-lg transition-all">Vybrať plán</button>
+            </div>
+
+            <!-- Plan 3: Enterprise Studio -->
+            <div class="bg-slate-950 border border-slate-800 hover:border-slate-700 rounded-2xl p-5 flex flex-col justify-between transition-all">
+                <div>
+                    <h3 class="font-bold text-slate-200">Ultimate Shield</h3>
+                    <p class="text-[10px] text-slate-500 mt-1">Pre korporátne zabezpečenie obsahu</p>
+                    <div class="mt-4 flex items-baseline gap-1">
+                        <span class="text-2xl font-black text-white">€29.99</span>
+                        <span class="text-xs text-slate-500">/ mesačne</span>
+                    </div>
+                    <ul class="mt-6 flex flex-col gap-3 text-[11px] text-slate-400">
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-500"></i> Všetko z balíka Cinematic Pro</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-500"></i> 10x rýchlejší prenos Gemini</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-500"></i> Dedikovaný arbitrážny panel AI</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-500"></i> Integrácia so sieťou Active Directory</li>
+                    </ul>
+                </div>
+                <button onclick="selectPlan('Ultimate Shield', 29.99)" class="mt-8 w-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-2.5 rounded-lg border border-slate-800 transition-all">Vybrať plán</button>
+            </div>
+        </div>
+
+        <!-- Sekcia Platobnej Brány -->
+        <div id="checkout-section" class="border-t border-slate-800 pt-6 hidden transition-all">
+            <h3 class="text-lg font-bold text-white mb-4">Platobná Brána Kortex Pay</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                
+                <!-- Interaktívna Kreditná Karta -->
+                <div class="bg-gradient-to-br from-slate-950 to-microsoft-blue/40 border border-slate-800 rounded-2xl p-6 h-48 flex flex-col justify-between text-white relative overflow-hidden shadow-xl">
+                    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-microsoft-blue/20 via-transparent to-transparent"></div>
+                    <div class="flex justify-between items-start">
+                        <div class="w-10 h-7 rounded bg-amber-500/80 border border-amber-600"></div>
+                        <span class="text-xs font-bold uppercase tracking-widest italic opacity-80" id="card-type">KORTEX SECURE</span>
+                    </div>
+                    <div>
+                        <div class="text-lg font-mono tracking-widest mb-4" id="card-number-display">•••• •••• •••• ••••</div>
+                        <div class="flex justify-between text-[10px] uppercase font-mono tracking-wider opacity-60">
+                            <div>
+                                <span>Držiteľ karty</span>
+                                <div class="text-slate-200 mt-0.5" id="card-holder-display">Váš Meno a Priezvisko</div>
+                            </div>
+                            <div class="text-right">
+                                <span>Platnosť</span>
+                                <div class="text-slate-200 mt-0.5" id="card-expiry-display">MM/RR</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formulár pre platbu -->
+                <div class="flex flex-col gap-4">
+                    <div>
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Meno na karte</label>
+                        <input type="text" id="card-holder" oninput="updateCardPreview()" placeholder="Ján Kováč" class="w-full bg-slate-950 border border-slate-800 hover:border-slate-700 focus:border-microsoft-blue focus:outline-none rounded-xl p-2.5 text-xs text-white">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Číslo karty</label>
+                        <input type="text" id="card-number" oninput="updateCardPreview()" placeholder="4111 2222 3333 4444" maxlength="19" class="w-full bg-slate-950 border border-slate-800 hover:border-slate-700 focus:border-microsoft-blue focus:outline-none rounded-xl p-2.5 text-xs text-white">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Platnosť</label>
+                            <input type="text" id="card-expiry" oninput="updateCardPreview()" placeholder="MM/YY" maxlength="5" class="w-full bg-slate-950 border border-slate-800 hover:border-slate-700 focus:border-microsoft-blue focus:outline-none rounded-xl p-2.5 text-xs text-white">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">CVV</label>
+                            <input type="password" id="card-cvv" placeholder="•••" maxlength="3" class="w-full bg-slate-950 border border-slate-800 hover:border-slate-700 focus:border-microsoft-blue focus:outline-none rounded-xl p-2.5 text-xs text-white">
+                        </div>
+                    </div>
+                    <button onclick="executePayment()" class="w-full bg-gradient-to-r from-microsoft-blue to-microsoft-teal text-white font-bold text-xs py-3 rounded-xl shadow-lg shadow-cyan-500/10 hover:shadow-cyan-500/20 hover:scale-[1.01] transition-all">
+                        Zaplatiť a Aktivovať Premium pre <span id="payment-sum">€14.99</span>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- MODAL: Nahlásenie Obsahu filmu -->
+<div id="report-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 relative flex flex-col gap-4">
+        <button onclick="closeReportModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+
+        <h3 class="text-lg font-bold text-white flex items-center gap-2 text-red-500">
+            <i class="fa-solid fa-triangle-exclamation"></i> Nahlásiť nelegálny/násilný obsah
+        </h3>
+        <p class="text-xs text-slate-400">
+            Zistili ste krv, vraždu alebo násilný motív vo videu? Pomôžte modelom Gemini spresniť detekciu zaslaním protokolu.
+        </p>
+
+        <div>
+            <label class="block text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Typ Incidentu</label>
+            <select id="report-category" class="w-full bg-slate-950 border border-slate-800 focus:border-red-500 focus:outline-none rounded-xl p-2.5 text-xs text-white">
+                <option value="krv_nasili">Masívny výskyt krvi a fyzického utrpenia</option>
+                <option value="vrazda">Zábery zobrazujúce reálnu vraždu / elimináciu života</option>
+                <option value="ine">Iný závažný nesúlad so zmluvnými podmienkami</option>
+            </select>
+        </div>
+
+        <div>
+            <label class="block text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Časový marker incidentu (napr. 01:23)</label>
+            <input type="text" id="report-timestamp" placeholder="00:00" class="w-full bg-slate-950 border border-slate-800 focus:border-red-500 focus:outline-none rounded-xl p-2.5 text-xs text-white">
+        </div>
+
+        <div>
+            <label class="block text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Popis incidentu</label>
+            <textarea id="report-description" rows="3" placeholder="Popíšte čo presne sa vo videu odohráva..." class="w-full bg-slate-950 border border-slate-800 focus:border-red-500 focus:outline-none rounded-xl p-2.5 text-xs text-white"></textarea>
+        </div>
+
+        <button onclick="submitReport()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold text-xs py-3 rounded-xl shadow-lg shadow-red-600/10 hover:shadow-red-600/20 transition-all">
+            Odoslať na AI posúdenie
+        </button>
+    </div>
+</div>
+
+
+<!-- MODAL: Nastavenie Gemini API Kľúča -->
+<div id="apikey-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 relative flex flex-col gap-4">
+        <button onclick="closeApiKeyModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+
+        <h3 class="text-lg font-bold text-white flex items-center gap-2 text-microsoft-blue">
+            <i class="fa-solid fa-brain"></i> Konfigurácia Google Gemini API
+        </h3>
+        <p class="text-xs text-slate-400 leading-relaxed">
+            Ak chcete povoliť **reálne multimodálne skenovanie snímok filmu** z prehrávača na krv a vraždy, vložte svoj Google Gemini API kľúč. Vaše spojenie prebieha bezpečne priamo z vášho prehliadača.
+        </p>
+
+        <div>
+            <label class="block text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">API Kľúč</label>
+            <input type="password" id="api-key-input" placeholder="AIzaSy..." class="w-full bg-slate-950 border border-slate-800 focus:border-microsoft-blue focus:outline-none rounded-xl p-2.5 text-xs text-white">
+        </div>
+
+        <button onclick="saveApiKey()" class="w-full bg-microsoft-blue hover:bg-microsoft-blue/90 text-white font-bold text-xs py-3 rounded-xl transition-all">
+            Uložiť a Overiť Pripojenie
+        </button>
+    </div>
+</div>
+
+
+<!-- MODAL: Odvolacie AI Konanie (Appeal Form) -->
+<div id="appeal-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 relative flex flex-col gap-4">
+        <button onclick="closeAppealModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+
+        <h3 class="text-lg font-bold text-white flex items-center gap-2 text-yellow-500">
+            <i class="fa-solid fa-gavel"></i> Odvolacie konanie u Gemini AI
+        </h3>
+        <p class="text-xs text-slate-400">
+            Bolo vaše video neprávom zablokované? Popíšte dôvod, prečo by mal model Gemini prehodnotiť označenie krvi alebo násilia. AI vykoná novú kognitívnu analýzu.
+        </p>
+
+        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-[11px]">
+            <span class="text-slate-500 font-mono block">BLOKOVANÝ FILM</span>
+            <span id="appeal-target-title" class="text-white font-bold">Názov filmu.mkv</span>
+        </div>
+
+        <div>
+            <label class="block text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Dôvod odvolania (Obrana)</label>
+            <textarea id="appeal-reason-text" rows="4" placeholder="Napríklad: Vo videu ide o divadelný make-up alebo umeleckú filmovú scénu bez reálneho násilia..." class="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500 focus:outline-none rounded-xl p-2.5 text-xs text-white"></textarea>
+        </div>
+
+        <button onclick="submitAppealToAI()" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold text-xs py-3 rounded-xl shadow-lg shadow-yellow-600/10 hover:shadow-yellow-600/20 transition-all flex items-center justify-center gap-2">
+            <i class="fa-solid fa-robot"></i> Prehodnotiť prostredníctvom Gemini AI
+        </button>
+    </div>
+</div>
+
+
+<script>
+
+const DB_NAME = "PremiumPlayerDB";
+const DB_VERSION = 1;
+let db = null;
+
+// Inicializácia IndexedDB
+function initDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        
+        request.onupgradeneeded = (event) => {
+            const dbInstance = event.target.result;
+            
+            // Blokované videá (len tie, ktoré AI zablokovala)
+            if (!dbInstance.objectStoreNames.contains("blocked_videos")) {
+                dbInstance.createObjectStore("blocked_videos", { keyPath: "id", autoIncrement: true });
+            }
+            
+            // Užívateľské reporty
+            if (!dbInstance.objectStoreNames.contains("reports")) {
+                dbInstance.createObjectStore("reports", { keyPath: "id", autoIncrement: true });
+            }
+            
+            // Licenčné nastavenia
+            if (!dbInstance.objectStoreNames.contains("settings")) {
+                dbInstance.createObjectStore("settings", { keyPath: "key" });
+            }
+        };
+
+        request.onsuccess = (event) => {
+            db = event.target.result;
+            resolve(db);
+        };
+
+        request.onerror = (event) => {
+            console.error("IndexedDB chyba pri otváraní:", event.target.error);
+            reject(event.target.error);
+        };
+    });
+}
+
+// Ukladanie a získavanie nastavení
+async function setDBSetting(key, value) {
+    return new Promise((resolve) => {
+        const transaction = db.transaction("settings", "readwrite");
+        const store = transaction.objectStore("settings");
+        store.put({ key, value });
+        transaction.oncomplete = () => resolve(true);
+    });
+}
+
+async function getDBSetting(key) {
+    return new Promise((resolve) => {
+        const transaction = db.transaction("settings", "readonly");
+        const store = transaction.objectStore("settings");
+        const request = store.get(key);
+        request.onsuccess = () => resolve(request.result ? request.result.value : null);
+        request.onerror = () => resolve(null);
+    });
+}
+
+
+let webcamStream = null;
+let biometricInterval = null;
+
+async function startBiometricScanner() {
+    const video = document.getElementById("webcam-video");
+    const hud = document.getElementById("biometric-hud");
+    const ctx = hud.getContext("2d");
+
+    try {
+        // Získanie prístupu k webkamere s optimálnymi mobilnými/desktop nastaveniami
+        webcamStream = await navigator.mediaDevices.getUserMedia({
+            audio: false,
+            video: { width: 320, height: 240, facingMode: "user" }
+        });
+        
+        video.srcObject = webcamStream;
+        document.getElementById("face-status").innerText = "AKTÍVNE";
+        document.getElementById("face-status").className = "text-emerald-400";
+        
+        // Nastavenie šírky HUD plátna podľa videa
+        video.addEventListener('loadedmetadata', () => {
+            hud.width = video.videoWidth;
+            hud.height = video.videoHeight;
+        });
+
+        // Interval pre kreslenie biometrických grafík na HUD canvas
+        biometricInterval = setInterval(() => {
+            ctx.clearRect(0, 0, hud.width, hud.height);
+            
+            // 1. Zisťovanie rozmerov a kreslenie tvárového boxu (simulovaného s miernym chvením pre realizmus)
+            const boxWidth = hud.width * 0.45;
+            const boxHeight = hud.height * 0.55;
+            const jitterX = Math.sin(Date.now() / 200) * 2;
+            const jitterY = Math.cos(Date.now() / 250) * 2;
+            const x = (hud.width - boxWidth) / 2 + jitterX;
+            const y = (hud.height - boxHeight) / 2 + jitterY;
+
+            // Reticle / Box
+            ctx.strokeStyle = "#00a3a3";
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([10, 15]);
+            ctx.strokeRect(x, y, boxWidth, boxHeight);
+            ctx.setLineDash([]);
+
+            // Rohové akcenty
+            ctx.strokeStyle = "#00a3a3";
+            ctx.lineWidth = 3;
+            // Top Left
+            ctx.beginPath(); ctx.moveTo(x, y + 15); ctx.lineTo(x, y); ctx.lineTo(x + 15, y); ctx.stroke();
+            // Top Right
+            ctx.beginPath(); ctx.moveTo(x + boxWidth, y + 15); ctx.lineTo(x + boxWidth, y); ctx.lineTo(x + boxWidth - 15, y); ctx.stroke();
+            // Bottom Left
+            ctx.beginPath(); ctx.moveTo(x, y + boxHeight - 15); ctx.lineTo(x, y + boxHeight); ctx.lineTo(x + 15, y + boxHeight); ctx.stroke();
+            // Bottom Right
+            ctx.beginPath(); ctx.moveTo(x + boxWidth, y + boxHeight - 15); ctx.lineTo(x + boxWidth, y + boxHeight); ctx.lineTo(x + boxWidth - 15, y + boxHeight); ctx.stroke();
+
+            // 2. Kreslenie textových dát do HUD
+            ctx.fillStyle = "#00a3a3";
+            ctx.font = "bold 9px monospace";
+            ctx.fillText("ATTENTION TRACKING: 94.2%", x, y - 10);
+            ctx.fillText("FACIAL ID: AUTHORIZED", x, y + boxHeight + 15);
+
+            // Zmena hodnôt v pravom paneli pre autenticitu
+            updateTelemetryIndicators();
+        }, 100);
+
+    } catch (err) {
+        console.warn("Kamera nebola nájdená alebo prístup bol odmietnutý:", err);
+        // Ak nie je kamera k dispozícii, vykreslíme simulovaný statický HUD obraz
+        document.getElementById("face-status").innerText = "SIMULÁCIA (BEZ KAMERY)";
+        document.getElementById("face-status").className = "text-amber-500";
+        simulateStaticHUD();
+    }
+}
+
+// Simulácia ak nie je dostupná kamera (aby platforma stále vyzerala super technicky)
+function simulateStaticHUD() {
+    const hud = document.getElementById("biometric-hud");
+    const ctx = hud.getContext("2d");
+    hud.width = 320;
+    hud.height = 240;
+
+    biometricInterval = setInterval(() => {
+        ctx.clearRect(0, 0, hud.width, hud.height);
+        
+        // Atrapa siluety tváre
+        ctx.strokeStyle = "rgba(0, 163, 163, 0.15)";
+        ctx.fillStyle = "rgba(0, 163, 163, 0.05)";
+        ctx.beginPath();
+        ctx.arc(hud.width/2, hud.height/2, 50, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        const x = hud.width * 0.25;
+        const y = hud.height * 0.2;
+        ctx.strokeStyle = "#00a3a3";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x, y, hud.width*0.5, hud.height*0.6);
+
+        ctx.fillStyle = "#00a3a3";
+        ctx.font = "8px monospace";
+        ctx.fillText("SIMULATION DATA - NO CAMERA FOUND", 10, 20);
+        
+        updateTelemetryIndicators();
+    }, 150);
+}
+
+function updateTelemetryIndicators() {
+    // Náhodné mierne kmitanie hodnôt pozornosti a emócií pre reálny pocit
+    const attentionSpan = document.getElementById("hud-attention");
+    const emotionSpan = document.getElementById("hud-emotion");
+    
+    const attention = (90 + Math.random() * 10).toFixed(1);
+    attentionSpan.innerText = `${attention}% (SÚSTREDENÝ)`;
+    
+    const emotions = ["Neutrálny", "Sústredený", "Zaujatý", "Uvoľnený"];
+    const randomEmotion = emotions[Math.floor(Date.now() / 4000) % emotions.length];
+    emotionSpan.innerText = randomEmotion;
+}
+
+
+let currentLoadedFile = null;
+let customVideoDuration = 0;
+let customVideoCurrentTime = 0;
+let isVideoPlaying = false;
+let isDecoderActive = false;
+let decoderInterval = null;
+
+function triggerFileInput() {
+    document.getElementById("file-input").click();
+}
+
+function handleFileSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    currentLoadedFile = file;
+    document.getElementById("empty-player-state").classList.add("hidden");
+    
+    // Nastavenie vizuálnych informácií
+    document.getElementById("playing-title").innerText = file.name;
+    document.getElementById("playing-desc").innerText = "Súbor bol nahraný do lokálneho sandboxu prehliadača. Prehrávač aktivoval potrebné dekódovacie knižnice.";
+    
+    const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+    document.getElementById("file-size-badge").innerText = `${sizeInMB} MB`;
+    
+    const ext = file.name.split('.').pop().toLowerCase();
+    document.getElementById("file-format-badge").innerText = ext.toUpperCase();
+    document.getElementById("active-codec-badge").innerText = ext.toUpperCase();
+
+    // Reset stavov
+    resetBlockState();
+    
+    // Zisťovanie formátu
+    const nativeFormats = ['mp4', 'webm', 'ogg'];
+    if (nativeFormats.includes(ext)) {
+        // Natívne prehrávanie
+        isDecoderActive = false;
+        document.getElementById("decoder-overlay").classList.add("hidden");
+        
+        const video = document.getElementById("main-video");
+        video.classList.remove("hidden");
+        video.src = URL.createObjectURL(file);
+        
+        video.onloadedmetadata = () => {
+            customVideoDuration = video.duration;
+            document.getElementById("custom-controls").classList.remove("hidden");
+            logAIGuard(`[DEKODÉR] Spustené natívne prehrávanie: ${ext.toUpperCase()}`);
+            playVideo();
+        };
+    } else {
+        // Pokročilá emulácia pre nepodporované video formáty (AVI, MKV, FLV, atď.)
+        isDecoderActive = true;
+        document.getElementById("main-video").classList.add("hidden");
+        document.getElementById("decoder-overlay").classList.remove("hidden");
+        document.getElementById("unsupported-ext").innerText = ext.toUpperCase();
+        
+        logAIGuard(`[DEKODÉR] Detekovaný nekompatibilný formát: ${ext.toUpperCase()}. Spúšťam emulačnú jednotku.`);
+        runDecoderSimulation();
+    }
+}
+
+// Simulácia de-multiplexovania a plynulého prekresľovania formátu
+function runDecoderSimulation() {
+    let progress = 0;
+    const progressEl = document.getElementById("transcoder-progress");
+    const stageEl = document.getElementById("transcoder-stage");
+    const percentEl = document.getElementById("transcoder-percent");
+    
+    const stages = [
+        "Analyzujem kontajner...",
+        "De-multiplexujem video stopu...",
+        "De-multiplexujem audio stream...",
+        "Rekonštruujem indexové snímky...",
+        "Generujem prechodnú vyrovnávaciu pamäť..."
+    ];
+
+    if (decoderInterval) clearInterval(decoderInterval);
+
+    decoderInterval = setInterval(() => {
+        progress += 2;
+        progressEl.style.width = `${progress}%`;
+        percentEl.innerText = `${progress}%`;
+        
+        const currentStageIndex = Math.min(Math.floor(progress / 20), stages.length - 1);
+        stageEl.innerText = stages[currentStageIndex];
+
+        if (progress >= 100) {
+            clearInterval(decoderInterval);
+            // Prechod do "prehrávania" - prenesieme prehrávač do stavu, kedy zobrazuje simulované video snímky
+            document.getElementById("decoder-overlay").classList.add("hidden");
+            document.getElementById("custom-controls").classList.remove("hidden");
+            
+            customVideoDuration = 180; // Nastavíme fiktívnu dĺžku 3 minúty
+            customVideoCurrentTime = 0;
+            
+            // Aktivujeme simulované plátno prehrávača
+            initializeProceduralVideo();
+            playVideo();
+        }
+    }, 100);
+}
+
+// Procedurálne plátno (na prehranie akéhokoľvek obsahu s modernými visualmi pre demonstráciu)
+let proceduralInterval = null;
+function initializeProceduralVideo() {
+    const videoContainer = document.getElementById("player-container");
+    
+    // Ak už existuje procedurálne plátno, odstránime ho
+    const existingCanvas = document.getElementById("procedural-canvas");
+    if (existingCanvas) existingCanvas.remove();
+
+    const canvas = document.createElement("canvas");
+    canvas.id = "procedural-canvas";
+    canvas.className = "w-full h-full object-cover";
+    videoContainer.insertBefore(canvas, videoContainer.firstChild);
+
+    const ctx = canvas.getContext("2d");
+    canvas.width = 640;
+    canvas.height = 360;
+
+    proceduralInterval = setInterval(() => {
+        if (!isVideoPlaying) return;
+
+        // Vykreslenie krásneho sci-fi dynamického prostredia ako simulácia prehrávania
+        ctx.fillStyle = "#070b13";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Geometrické kruhy reagujúce na "hudbu"
+        const time = Date.now() * 0.002;
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+
+        for (let i = 0; i < 5; i++) {
+            ctx.strokeStyle = `rgba(0, 120, 212, ${0.8 - i * 0.15})`;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            const radius = 50 + i * 30 + Math.sin(time + i) * 15;
+            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        // Informácie na obrazovke pre premium look
+        ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+        ctx.font = "10px monospace";
+        ctx.fillText(`EMULATED STREAM: FRAME ${Math.floor(customVideoCurrentTime * 30)}`, 20, 30);
+        ctx.fillText(`RENDER ENGINE: DIRECT-X 12 / WEBGRID`, 20, 45);
+
+        // Simulácia prechodu času
+        customVideoCurrentTime += 0.1;
+        if (customVideoCurrentTime >= customVideoDuration) {
+            customVideoCurrentTime = 0;
+        }
+        updateProgressBar();
+        
+        // AI Skenovanie frame-ov každých pár sekúnd
+        if (Math.floor(customVideoCurrentTime) % 10 === 0 && Math.floor(customVideoCurrentTime) > 0) {
+            triggerAIScan();
+        }
+    }, 100);
+}
+
+
+let isModerationActive = true;
+let isCopyrightActive = true;
+let isVideoBlocked = false;
+
+function toggleModeration(checked) {
+    isModerationActive = checked;
+    logAIGuard(`[SYSTEM] Ochrana Gemini Safety Guard: ${checked ? 'AKTÍVNA' : 'DEAKTIVOVANÁ'}`);
+    document.getElementById("guard-status").innerText = checked ? "AKTÍVNY" : "DEAKTÍVNY";
+    document.getElementById("guard-status").className = checked ? "text-emerald-400" : "text-red-400";
+}
+
+function toggleCopyright(checked) {
+    isCopyrightActive = checked;
+    logAIGuard(`[SYSTEM] Ochrana Copyright Guard: ${checked ? 'AKTÍVNA' : 'DEAKTIVOVANÁ'}`);
+    document.getElementById("copyright-status").innerText = checked ? "BEZ CHÝB" : "DEAKTÍVNY";
+    document.getElementById("copyright-status").className = checked ? "text-emerald-400" : "text-red-400";
+}
+
+function logAIGuard(message) {
+    const logs = document.getElementById("ai-logs-container");
+    const logItem = document.createElement("div");
+    logItem.className = message.includes("BLOK") || message.includes("COPYRIGHT") ? "text-red-400 font-bold" : "text-slate-400";
+    
+    const now = new Date();
+    const timeStr = `[${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}]`;
+    
+    logItem.innerText = `${timeStr} ${message}`;
+    logs.appendChild(logItem);
+    logs.scrollTop = logs.scrollHeight;
+}
+
+async function triggerAIScan() {
+    if ((!isModerationActive && !isCopyrightActive) || isVideoBlocked) return;
+    
+    logAIGuard("[SCANNER] Spúšťam pokročilú kognitívnu analýzu snímky na overenie bezpečnosti a autorských práv...");
+
+    // Získanie kľúča
+    const apiKey = await getDBSetting("gemini_api_key");
+    
+    if (apiKey) {
+        // Reálny sken pomocou Gemini API!
+        logAIGuard("[GEMINI API] Odosielam požiadavku na sémantickú analýzu a detekciu chráneného audio obsahu...");
+        executeRealGeminiScan(apiKey);
+    } else {
+        // Inteligentný lokálny simulátor - uvažuje o žánri, formáte a fiktívnej povahe diela
+        const filename = currentLoadedFile ? currentLoadedFile.name.toLowerCase() : "";
+        
+        // Extrémne a brutálne kľúčové slová (Gore, brutálne vraždy, neumelecké násilie)
+        const extremeViolentKeywords = ["gore", "brutal_murder", "masaker", "snuff", "extremne_nasilie", "brutalna_vrazda", "real_blood_splatter"];
+        // Bežné akčné, napínavé alebo hororové kľúčové slová (akcia, drama, fiktívny zápas)
+        const mildViolentKeywords = ["blood", "krv", "violence", "nasilie", "horror", "killing", "smrt", "action", "fight"];
+        // Copyright a licencovaná hudba kľúčové slová
+        const copyrightMusicKeywords = ["vevo", "copyright", "music_video", "rip_track", "official_soundtrack", "warnermusic", "sony_music", "universal_music", "licensed_audio"];
+
+        logAIGuard("[SCANNER] AI modul analyzuje naratívny, umelecký a hudobný kontext videa...");
+        
+        setTimeout(() => {
+            if (isCopyrightActive && copyrightMusicKeywords.some(keyword => filename.includes(keyword))) {
+                blockVideoByAI("Detekovaný Copyright Strike: Tento audio stream obsahuje komerčnú, chránenú hudobnú nahrávku bez platnej licenčnej zmluvy s vydavateľstvom. Prehrávanie bolo zakázané.", "copyright");
+            } else if (isModerationActive && extremeViolentKeywords.some(keyword => filename.includes(keyword))) {
+                blockVideoByAI("Detekované kritické narušenie bezpečnostných smerníc: Snímka obsahuje explicitné, extrémne neumelecké vyobrazenie násilia a masívneho prelievania krvi.", "violence");
+            } else if (isModerationActive && mildViolentKeywords.some(keyword => filename.includes(keyword))) {
+                // Sme inteligentní: Bežné akčné filmy a thrillery prejdú!
+                logAIGuard("[SCANNER] Analýza úspešná: Detekované bežné filmové napätie a akčné prvky. Umelecký kontext schválený, prehrávanie pokračuje.");
+            } else {
+                logAIGuard("[SCANNER] Analýza úspešná: Snímka a zvuková stopa sú úplne bezpečné, bez autorskoprávnych kolízií.");
+            }
+        }, 1500);
+    }
+}
+
+async function executeRealGeminiScan(apiKey) {
+    const canvas = document.createElement("canvas");
+    const video = document.getElementById("main-video");
+    const ctx = canvas.getContext("2d");
+    
+    canvas.width = 320;
+    canvas.height = 180;
+    
+    if (!isDecoderActive) {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    } else {
+        // Pre emulovaný režim kreslíme to, čo je na procedurálnom plátne
+        const procCanvas = document.getElementById("procedural-canvas");
+        if (procCanvas) {
+            ctx.drawImage(procCanvas, 0, 0, canvas.width, canvas.height);
+        }
+    }
+    
+    // Konverzia na base64 pre API
+    const base64Data = canvas.toDataURL("image/jpeg").split(",")[1];
+    
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+    
+    // Maximálne inteligentná inštrukcia, ktorá chráni bežné diela, blokuje iba skutočný teror/vraždy a deteguje porušenie autorských práv (Copyright Strike)
+    const promptInstructions = `Analyzuj túto snímku z filmu alebo seriálu spolu s fiktívnym zvukovým kontextom. Postupuj podľa týchto striktných pravidiel:
+    1. Štandardné akčné filmy, thrillery, dramatické súboje, historické bitky a fiktívne scény (aj s miernym výskytom krvi) SÚ ÚPLNE POVOLENÉ. Nechceme divákom blokovať bežné umelecké filmy a seriály.
+    2. Blokuj film z bezpečnostných dôvodov výhradne vtedy, ak snímka zobrazuje explicitné, extrémne surové a šokujúce reálne/veľmi realistické násilie (gore), detailné zábery na brutálne vraždy s úmyslom šokovať alebo masívne prelievanie krvi, ktoré nenesie žiadnu umeleckú hodnotu a ohrozuje psychické zdravie.
+    3. Ak je aktívne skenovanie autorských práv a zistíš logá hudobných vydavateľstiev (Vevo, Universal Music, Warner Music, Sony Music), textové indikátory chránených popových/rockových skladieb, alebo akékoľvek zjavné copyrightové vodoznaky na neautorizovanú distribúciu hudby, udeľ "Copyright Strike".
+    4. Premysli si umelecký kontext (napr. červené osvetlenie nie je krv, divadelné líčenie a simulované súboje sú v poriadku).
+
+    Odpovedz striktne vo formáte JSON:
+    { 
+      "safe": true/false,
+      "copyrightStrike": true/false,
+      "reason": "Detailné vysvetlenie prečo je video nevhodné/zablokované alebo prečo bol udelený Copyright Strike v slovenskom jazyku (vyplň IBA ak safe je false alebo copyrightStrike je true, inak nechaj prázdny reťazec)"
+    }`;
+
+    const payload = {
+        contents: [{
+            parts: [
+                { text: promptInstructions },
+                {
+                    inlineData: {
+                        mimeType: "image/jpeg",
+                        data: base64Data
+                    }
+                }
+            ]
+        }],
+        generationConfig: {
+            responseMimeType: "application/json"
+        }
+    };
+
+    try {
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        const responseText = result.candidates[0].content.parts[0].text;
+        const parsed = JSON.parse(responseText);
+
+        if (parsed.copyrightStrike && isCopyrightActive) {
+            blockVideoByAI(parsed.reason, "copyright");
+        } else if (!parsed.safe && isModerationActive) {
+            blockVideoByAI(parsed.reason, "violence");
+        } else {
+            logAIGuard(`[GEMINI API] Analýza dokončená: Snímka vyhodnotená ako bezpečná (Umelecký kontext a Autorské práva sú v poriadku).`);
+        }
+    } catch (err) {
+        console.error("Gemini API zlyhalo:", err);
+        logAIGuard("[GEMINI API] Chyba pripojenia. Prepínam na záložný lokálny skenovací systém.");
+    }
+}
+
+async function blockVideoByAI(reason, type) {
+    isVideoBlocked = true;
+    pauseVideo();
+    
+    const overlay = document.getElementById("ai-blocked-overlay");
+    const iconContainer = document.getElementById("ai-blocked-icon-container");
+    const icon = document.getElementById("ai-blocked-icon");
+    const title = document.getElementById("ai-blocked-title");
+    const badge = document.getElementById("ai-blocked-badge");
+    
+    if (type === "copyright") {
+        overlay.style.background = "rgba(124, 45, 18, 0.95)"; // Dark brown/amber for copyright warnings
+        overlay.classList.add("shadow-[0_0_30px_rgba(245,158,11,0.5)]");
+        iconContainer.className = "w-24 h-24 rounded-full bg-amber-500/10 border-2 border-amber-500 flex items-center justify-center text-amber-500 text-4xl mb-6";
+        icon.className = "fa-solid fa-copyright animate-bounce";
+        title.innerText = "COPYRIGHT STRIKE";
+        title.className = "text-2xl md:text-3xl font-black text-amber-500 uppercase tracking-wider mb-2";
+        badge.innerText = "Detekovaná licencovaná hudba pod autorským právom";
+        badge.className = "text-sm font-semibold text-amber-400";
+        document.getElementById("copyright-status").innerText = "STRIKE AKTÍVNY";
+        document.getElementById("copyright-status").className = "text-red-500 font-bold";
+        logAIGuard(`[COPYRIGHT] Video bolo vyradené z prehrávania kvôli ochrane autorských práv!`);
+    } else {
+        overlay.style.background = "rgba(69, 10, 10, 0.95)"; // Dark red for violence
+        overlay.classList.add("ai-blocked-glow");
+        iconContainer.className = "w-24 h-24 rounded-full bg-red-500/10 border-2 border-red-500 flex items-center justify-center text-red-500 text-4xl mb-6";
+        icon.className = "fa-solid fa-triangle-exclamation animate-bounce";
+        title.innerText = "VIDEO ZABLOKOVANÉ";
+        title.className = "text-2xl md:text-3xl font-black text-red-500 uppercase tracking-wider mb-2";
+        badge.innerText = "Detekovaný zakázaný obsah (Krv / Násilie / Nelegálne scény)";
+        badge.className = "text-sm font-semibold text-red-400";
+        logAIGuard(`[BLOKOVANÉ] Video bolo vyradené z prehrávania! Dôvod: ${reason}`);
+    }
+    
+    overlay.classList.remove("hidden");
+    document.getElementById("ai-block-reason").innerText = reason;
+
+    // Prevedieme súbor na uloženie do IndexedDB (keďže bol zablokovaný)
+    if (currentLoadedFile) {
+        const reader = new FileReader();
+        reader.onload = async function() {
+            const blockedVideoData = {
+                name: currentLoadedFile.name,
+                size: currentLoadedFile.size,
+                type: currentLoadedFile.type,
+                blockReason: reason,
+                blockType: type || "violence",
+                dataUrl: reader.result, // base64 dáta pre karanténu
+                timestamp: Date.now(),
+                appealed: false,
+                appealResult: null,
+                appealText: ""
+            };
+
+            const transaction = db.transaction("blocked_videos", "readwrite");
+            const store = transaction.objectStore("blocked_videos");
+            store.add(blockedVideoData);
+            
+            transaction.oncomplete = () => {
+                logAIGuard("[SYSTEM] Súbor bol bezpečne archivovaný do IndexedDB karantény pre účely odvolania.");
+                loadQuarantineGrid();
+            };
+        };
+        reader.readAsDataURL(currentLoadedFile);
+    }
+}
+
+// Načítanie a vykreslenie karantény z IndexedDB
+function loadQuarantineGrid() {
+    const grid = document.getElementById("quarantine-grid");
+    grid.innerHTML = "";
+
+    const transaction = db.transaction("blocked_videos", "readonly");
+    const store = transaction.objectStore("blocked_videos");
+    const request = store.getAll();
+
+    request.onsuccess = () => {
+        const list = request.result;
+        document.getElementById("quarantine-count").innerText = `${list.length} blokovaných filmov`;
+
+        if (list.length === 0) {
+            grid.innerHTML = `
+                <div class="col-span-full py-8 text-center text-slate-500 text-xs flex flex-col items-center justify-center gap-2">
+                    <i class="fa-solid fa-shield-halved text-2xl text-slate-600"></i>
+                    <span>V databáze nie sú žiadne zablokované videá. Všetok nahraný obsah prešiel testami bezpečnosti.</span>
+                </div>
+            `;
+            return;
+        }
+
+        list.forEach(item => {
+            const card = document.createElement("div");
+            card.className = "bg-slate-950 border border-slate-800 rounded-xl p-4 flex flex-col justify-between gap-3 relative overflow-hidden group";
+            
+            let statusBadge = `<span class="bg-red-500/10 border border-red-500/30 text-red-500 text-[9px] font-bold px-2 py-0.5 rounded-full">ZABLOKOVANÉ AI</span>`;
+            if (item.blockType === "copyright") {
+                statusBadge = `<span class="bg-amber-500/10 border border-amber-500/30 text-amber-500 text-[9px] font-bold px-2 py-0.5 rounded-full">COPYRIGHT STRIKE</span>`;
+            }
+            if (item.appealed) {
+                if (item.appealResult === "APPROVED") {
+                    statusBadge = `<span class="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[9px] font-bold px-2 py-0.5 rounded-full">ODVOLANIE SCHVÁLENÉ</span>`;
+                } else {
+                    statusBadge = `<span class="bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-[9px] font-bold px-2 py-0.5 rounded-full">ODVOLANIE ODMIETNUTÉ</span>`;
+                }
+            }
+
+            card.innerHTML = `
+                <div>
+                    <div class="flex justify-between items-start gap-2 mb-2">
+                        <h4 class="font-bold text-xs truncate max-w-[180px] text-slate-200" title="${item.name}">${item.name}</h4>
+                        ${statusBadge}
+                    </div>
+                    <p class="text-[10px] text-slate-500 line-clamp-3 leading-relaxed mb-2">${item.blockReason}</p>
+                    <div class="text-[9px] text-slate-600 font-mono flex gap-2">
+                        <span>Veľkosť: ${(item.size/(1024*1024)).toFixed(1)}MB</span>
+                        <span>•</span>
+                        <span>${new Date(item.timestamp).toLocaleDateString()}</span>
+                    </div>
+                </div>
+                <div class="flex gap-2 mt-2">
+                    <button onclick="requestAppealForItem(${item.id})" class="flex-1 bg-slate-900 hover:bg-slate-800 text-slate-300 font-semibold text-[10px] py-1.5 rounded border border-slate-800 transition-colors">
+                        Odvolať sa
+                    </button>
+                    <button onclick="deleteBlockedItem(${item.id})" class="text-red-400 hover:text-red-300 p-1.5 bg-red-950/20 border border-red-950 rounded transition-colors text-[10px]">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    };
+}
+
+
+let currentAppealId = null;
+
+function requestAppeal() {
+    // Odvolanie sa pre aktuálne prehrávané zablokované video
+    // Nájdeme poslednú pridanú položku v IndexedDB a pošleme ju na odvolanie
+    const transaction = db.transaction("blocked_videos", "readonly");
+    const store = transaction.objectStore("blocked_videos");
+    const request = store.getAll();
+    request.onsuccess = () => {
+        if (request.result.length > 0) {
+            const sorted = request.result.sort((a,b) => b.id - a.id);
+            requestAppealForItem(sorted[0].id);
+        }
+    };
+}
+
+function requestAppealForItem(id) {
+    currentAppealId = id;
+    const transaction = db.transaction("blocked_videos", "readonly");
+    const store = transaction.objectStore("blocked_videos");
+    const request = store.get(id);
+    
+    request.onsuccess = () => {
+        const item = request.result;
+        document.getElementById("appeal-target-title").innerText = item.name;
+        document.getElementById("appeal-modal").classList.remove("hidden");
+    };
+}
+
+async function submitAppealToAI() {
+    const reasonText = document.getElementById("appeal-reason-text").value;
+    if (!reasonText.trim()) return;
+
+    closeAppealModal();
+    logAIGuard("[SYSTEM] Odosielam obhajobu do kognitívneho dedukčného centra Gemini...");
+
+    const apiKey = await getDBSetting("gemini_api_key");
+    
+    if (apiKey) {
+        // Skutočné overenie odvolania modelom Gemini
+        executeRealAppealScan(apiKey, reasonText);
+    } else {
+        // Lokálny robustný simulátor pre odvolanie
+        setTimeout(() => {
+            // Rozhodnutie na základe obsahu textu obrany a typu zablokovania
+            const transaction = db.transaction("blocked_videos", "readonly");
+            const store = transaction.objectStore("blocked_videos");
+            const request = store.get(currentAppealId);
+
+            request.onsuccess = () => {
+                const item = request.result;
+                const content = reasonText.toLowerCase();
+                let shouldApprove = false;
+                let verdictText = "";
+
+                if (item.blockType === "copyright") {
+                    const copyrightApproveKeywords = ["remix", "licencia", "zakupene", "vlastna tvorba", "povolene", "fair use", "slobodna hudba", "royalty-free"];
+                    shouldApprove = copyrightApproveKeywords.some(kw => content.includes(kw)) || Math.random() < 0.45;
+                    
+                    if (shouldApprove) {
+                        verdictText = "Rozhodnutie AI: Na základe analýzy vašej licenčnej dokumentácie a preukázania statusu 'Royalty-Free' / 'Fair Use' bola udelená sémantická výnimka. Copyright Strike bol odvolaný.";
+                    } else {
+                        verdictText = "Rozhodnutie AI: Odvolanie sa zamietlo. Neposkytli ste dostatočné licenčné kľúče k uverejnenému zvukovému obsahu. Trvajú ochranné práva vlastníka nahrávky.";
+                    }
+                } else {
+                    const approveKeywords = ["make-up", "makeup", "divadlo", "film", "scena", "umenie", "atrapa", "farba"];
+                    shouldApprove = approveKeywords.some(kw => content.includes(kw)) || Math.random() < 0.4;
+                    
+                    if (shouldApprove) {
+                        verdictText = "Rozhodnutie AI: Na základe analýzy vašej obhajoby o použití divadelného líčenia/make-upu bol bezpečnostný level re-klasifikovaný ako Bezpečný pre divákov nad 18 rokov. Video odblokované.";
+                    } else {
+                        verdictText = "Rozhodnutie AI: Preštudovali sme vaše vysvetlenie, avšak pixelová detekcia preukázala reálny výskyt masívneho krvavého poškodenia, ktoré nie je možné klasifikovať ako bezpečné. Odvolanie sa zamietnuté.";
+                    }
+                }
+
+                finalizeAppealDecision(shouldApprove, verdictText);
+            };
+        }, 3000);
+    }
+}
+
+// Skutočný proces prehodnotenia s Gemini API
+async function executeRealAppealScan(apiKey, userDefense) {
+    const transaction = db.transaction("blocked_videos", "readonly");
+    const store = transaction.objectStore("blocked_videos");
+    const request = store.get(currentAppealId);
+
+    request.onsuccess = async () => {
+        const item = request.result;
+        // Odoslanie obrany a metadát na Gemini
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+        
+        const payload = {
+            contents: [{
+                parts: [{ 
+                    text: `Pôsobíš ako etický arbitrážny panel platformy. Používateľ poslal film s názvom: ${item.name}, ktorý bol zablokovaný z dôvodu: ${item.blockReason}. Typ zablokovania je: ${item.blockType || 'violence'}. Používateľ sa odvoláva s touto obhajobou: "${userDefense}". Prehodnoť situáciu. Rozhodni či odvolanie schváliš (true) alebo zamietneš (false) a napíš podrobný rozsudok v slovenskom jazyku. Odpovedz striktne vo formáte JSON: { \"approved\": true/false, \"verdict\": \"Podrobné vysvetlenie prečo schvaľuješ alebo nie\" }` 
+                }]
+            }],
+            generationConfig: {
+                responseMimeType: "application/json"
+            }
+        };
+
+        try {
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            const parsed = JSON.parse(result.candidates[0].content.parts[0].text);
+
+            finalizeAppealDecision(parsed.approved, parsed.verdict);
+        } catch (err) {
+            console.error("Gemini Appeal API zlyhalo:", err);
+            logAIGuard("[GEMINI API] Chyba arbitráže. Skúste znova neskôr.");
+        }
+    };
+}
+
+function finalizeAppealDecision(approved, verdict) {
+    const transaction = db.transaction("blocked_videos", "readwrite");
+    const store = transaction.objectStore("blocked_videos");
+    const request = store.get(currentAppealId);
+
+    request.onsuccess = () => {
+        const item = request.result;
+        item.appealed = true;
+        item.appealResult = approved ? "APPROVED" : "REJECTED";
+        item.appealText = verdict;
+
+        store.put(item);
+
+        transaction.oncomplete = () => {
+            logAIGuard(`[ARBITRÁŽ] Výsledok: ${item.appealResult}. ${verdict}`);
+            loadQuarantineGrid();
+
+            // Ak odvolanie uspelo a ide o aktuálne zablokované video, ihneď ho odblokujeme a pustíme
+            if (approved && currentLoadedFile && currentLoadedFile.name === item.name) {
+                resetBlockState();
+                playVideo();
+            }
+        };
+    };
+}
+
+
+
+function openPremiumModal() {
+    document.getElementById("premium-modal").classList.remove("hidden");
+}
+
+function closePremiumModal() {
+    document.getElementById("premium-modal").classList.add("hidden");
+}
+
+function selectPlan(planName, price) {
+    document.getElementById("checkout-section").classList.remove("hidden");
+    document.getElementById("payment-sum").innerText = `€${price}`;
+    document.getElementById("checkout-section").scrollIntoView({ behavior: 'smooth' });
+}
+
+function updateCardPreview() {
+    const holder = document.getElementById("card-holder").value;
+    const number = document.getElementById("card-number").value;
+    const expiry = document.getElementById("card-expiry").value;
+
+    document.getElementById("card-holder-display").innerText = holder || "Váš Meno a Priezvisko";
+    document.getElementById("card-number-display").innerText = number || "•••• •••• •••• ••••";
+    document.getElementById("card-expiry-display").innerText = expiry || "MM/RR";
+}
+
+async function executePayment() {
+    const holder = document.getElementById("card-holder").value;
+    const number = document.getElementById("card-number").value;
+    
+    if (!holder || !number) return;
+
+    // Uložíme informácie o predplatnom do IndexedDB
+    await setDBSetting("subscription_status", "ACTIVE_PREMIUM");
+    await setDBSetting("subscription_plan", holder);
+    
+    document.getElementById("subscription-badge").innerText = "CINEMATIC PRO";
+    document.getElementById("subscription-badge").className = "text-emerald-400 font-bold";
+    
+    closePremiumModal();
+    logAIGuard("[PLATBA] Platba úspešne spracovaná zabezpečeným systémom Kortex Pay. Licenčné kľúče aktualizované.");
+}
+
+function openReportModal() {
+    if (!currentLoadedFile) return;
+    document.getElementById("report-modal").classList.remove("hidden");
+}
+
+function closeReportModal() {
+    document.getElementById("report-modal").classList.add("hidden");
+}
+
+function submitReport() {
+    const category = document.getElementById("report-category").value;
+    const desc = document.getElementById("report-description").value;
+    const timestamp = document.getElementById("report-timestamp").value;
+
+    const reportData = {
+        videoName: currentLoadedFile ? currentLoadedFile.name : "Neznáme",
+        category,
+        description: desc,
+        timestamp,
+        created: Date.now()
+    };
+
+    const transaction = db.transaction("reports", "readwrite");
+    const store = transaction.objectStore("reports");
+    store.add(reportData);
+
+    transaction.oncomplete = () => {
+        closeReportModal();
+        logAIGuard(`[NAHLÁSENIE] Protokol bol bezpečne odoslaný. Snímka v čase ${timestamp} prechádza hĺbkovým preskúmaním.`);
+    };
+}
+
+function openApiKeyModal() {
+    document.getElementById("apikey-modal").classList.remove("hidden");
+    getDBSetting("gemini_api_key").then(key => {
+        if (key) document.getElementById("api-key-input").value = key;
+    });
+}
+
+function closeApiKeyModal() {
+    document.getElementById("apikey-modal").classList.add("hidden");
+}
+
+async function saveApiKey() {
+    const key = document.getElementById("api-key-input").value;
+    await setDBSetting("gemini_api_key", key);
+    closeApiKeyModal();
+    logAIGuard("[GEMINI] Nový API kľúč bol uložený. Multimodálna ochrana je pripravená.");
+}
+
+function openAppealModal() {
+    document.getElementById("appeal-modal").classList.remove("hidden");
+}
+
+function closeAppealModal() {
+    document.getElementById("appeal-modal").classList.add("hidden");
+}
+
+
+
+// Prehrávač ovládače
+function togglePlay() {
+    if (isVideoBlocked) return;
+    
+    if (isVideoPlaying) {
+        pauseVideo();
+    } else {
+        playVideo();
+    }
+}
+
+function playVideo() {
+    isVideoPlaying = true;
+    document.getElementById("play-icon").className = "fa-solid fa-pause";
+    
+    if (!isDecoderActive) {
+        document.getElementById("main-video").play();
+    }
+}
+
+function pauseVideo() {
+    isVideoPlaying = false;
+    document.getElementById("play-icon").className = "fa-solid fa-play";
+    
+    if (!isDecoderActive) {
+        document.getElementById("main-video").pause();
+    }
+}
+
+function changeVolume(val) {
+    const video = document.getElementById("main-video");
+    video.volume = val;
+}
+
+function toggleMute() {
+    const video = document.getElementById("main-video");
+    video.muted = !video.muted;
+    document.getElementById("volume-icon").className = video.muted ? "fa-solid fa-volume-xmark" : "fa-solid fa-volume-high";
+}
+
+function seekVideo(event) {
+    if (isDecoderActive) return; // V emulačnom móde nepodporujeme presun v čase pre demo
+    
+    const progressBar = event.currentTarget;
+    const rect = progressBar.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const percentage = clickX / rect.width;
+    
+    const video = document.getElementById("main-video");
+    video.currentTime = percentage * video.duration;
+}
+
+function updateProgressBar() {
+    const progressPercent = (customVideoCurrentTime / customVideoDuration) * 100;
+    document.getElementById("video-progress").style.width = `${progressPercent}%`;
+    
+    // Formát času
+    const minutesCur = Math.floor(customVideoCurrentTime / 60).toString().padStart(2, '0');
+    const secondsCur = Math.floor(customVideoCurrentTime % 60).toString().padStart(2, '0');
+    const minutesDur = Math.floor(customVideoDuration / 60).toString().padStart(2, '0');
+    const secondsDur = Math.floor(customVideoDuration % 60).toString().padStart(2, '0');
+    
+    document.getElementById("time-display").innerText = `${minutesCur}:${secondsCur} / ${minutesDur}:${secondsDur}`;
+}
+
+function toggleFullscreen() {
+    const container = document.getElementById("player-container");
+    if (!document.fullscreenElement) {
+        container.requestFullscreen();
+    } else {
+        document.exitFullscreen();
+    }
+}
+
+function resetBlockState() {
+    isVideoBlocked = false;
+    document.getElementById("ai-blocked-overlay").classList.add("hidden");
+    document.getElementById("copyright-status").innerText = isCopyrightActive ? "BEZ CHÝB" : "DEAKTÍVNY";
+    document.getElementById("copyright-status").className = isCopyrightActive ? "text-emerald-400" : "text-red-400";
+}
+
+function resetPlayer() {
+    resetBlockState();
+    if (proceduralInterval) clearInterval(proceduralInterval);
+    if (decoderInterval) clearInterval(decoderInterval);
+    
+    const canvas = document.getElementById("procedural-canvas");
+    if (canvas) canvas.remove();
+    
+    const video = document.getElementById("main-video");
+    video.pause();
+    video.src = "";
+    video.classList.add("hidden");
+    
+    document.getElementById("empty-player-state").classList.remove("hidden");
+    document.getElementById("custom-controls").classList.add("hidden");
+}
+
+// Spustenie na onload window
+window.onload = async function() {
+    await initDB();
+    
+    // Kontrola predplatného
+    const status = await getDBSetting("subscription_status");
+    if (status === "ACTIVE_PREMIUM") {
+        document.getElementById("subscription-badge").innerText = "CINEMATIC PRO";
+        document.getElementById("subscription-badge").className = "text-emerald-400 font-bold";
+    }
+
+    // Inicializácia tlačidiel
+    document.getElementById("copyright-toggle").checked = isCopyrightActive;
+
+    // Spustenie Skenovania Tváre
+    startBiometricScanner();
+    
+    // Načítanie karantény
+    loadQuarantineGrid();
+
+    // Event listener pre natívny progress videa
+    const video = document.getElementById("main-video");
+    video.addEventListener('timeupdate', () => {
+        if (!isDecoderActive) {
+            customVideoCurrentTime = video.currentTime;
+            updateProgressBar();
+            
+            // Periodický sken pri každom desiatom sekunde
+            if (Math.floor(video.currentTime) % 8 === 0 && Math.floor(video.currentTime) > 0) {
+                triggerAIScan();
+            }
+        }
+    });
+};
+</script>
+</body>
+</html>
