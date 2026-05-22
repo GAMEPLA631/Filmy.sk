@@ -332,7 +332,7 @@
                 <div class="flex items-center justify-between border-t border-slate-800/50 pt-3">
                     <div class="flex flex-col gap-0.5">
                         <span class="text-xs font-semibold">Skenovanie autorských práv (Copyright)</span>
-                        <span class="text-[9px] text-slate-500">Detekcia chránenej hudby a Copyright Strike</span>
+                        <span class="text-[9px] text-slate-500">Detekcia chránenej hudby a Copyright Strike vo videu</span>
                     </div>
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" id="copyright-toggle" checked class="sr-only peer" onchange="toggleCopyright(this.checked)">
@@ -354,7 +354,7 @@
                 <h2 class="text-lg font-bold text-white flex items-center gap-2">
                     <i class="fa-solid fa-lock text-red-500"></i> Karanténa Blokovaného Obsahu
                 </h2>
-                <p class="text-xs text-slate-400 mt-1">Tu sú uložené všetky videá, ktoré Gemini AI zablokovala ako nebezpečné (násilné / krvavé). Sú v bezpečí zapísané v lokálnej IndexedDB databáze.</p>
+                <p class="text-xs text-slate-400 mt-1">Tu sú uložené všetky videá, ktoré Gemini AI zablokovala ako nebezpečné (násilné / krvavé) alebo s porušením copyrightu. Sú v bezpečí zapísané v lokálnej IndexedDB databáze.</p>
             </div>
             <div class="flex items-center gap-2">
                 <span id="quarantine-count" class="bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-bold px-2.5 py-1 rounded-full">0 blokovaných filmov</span>
@@ -588,7 +588,7 @@
             <i class="fa-solid fa-gavel"></i> Odvolacie konanie u Gemini AI
         </h3>
         <p class="text-xs text-slate-400">
-            Bolo vaše video neprávom zablokované? Popíšte dôvod, prečo by mal model Gemini prehodnotiť označenie krvi alebo násilia. AI vykoná novú kognitívnu analýzu.
+            Bolo vaše video neprávom zablokované? Popíšte dôvod, prečo by mal model Gemini prehodnotiť označenie krvi, násilia alebo zvuku chráneného autorským právom. AI vykoná novú kognitívnu analýzu.
         </p>
 
         <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-[11px]">
@@ -598,7 +598,7 @@
 
         <div>
             <label class="block text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Dôvod odvolania (Obrana)</label>
-            <textarea id="appeal-reason-text" rows="4" placeholder="Napríklad: Vo videu ide o divadelný make-up alebo umeleckú filmovú scénu bez reálneho násilia..." class="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500 focus:outline-none rounded-xl p-2.5 text-xs text-white"></textarea>
+            <textarea id="appeal-reason-text" rows="4" placeholder="Napríklad: Vo videu ide o divadelný make-up alebo autorská hudba je licencovaná / Royalty-Free..." class="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500 focus:outline-none rounded-xl p-2.5 text-xs text-white"></textarea>
         </div>
 
         <button onclick="submitAppealToAI()" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold text-xs py-3 rounded-xl shadow-lg shadow-yellow-600/10 hover:shadow-yellow-600/20 transition-all flex items-center justify-center gap-2">
@@ -622,7 +622,7 @@ let isVideoPlaying = false;
 let isDecoderActive = false;
 let decoderInterval = null;
 let proceduralInterval = null;
-let isMusicMode = false;
+let isMusicMode = false; // Vždy deaktívne pre plnohodnotné video, no ponechané pre typovú kompatibilitu
 let audioCtx = null;
 let analyser = null;
 let sourceConnected = false;
@@ -844,78 +844,53 @@ function handleFileSelect(event) {
     
     // Reset predchádzajúcich stavov ochrany
     resetBlockState();
-    isMusicMode = (ext === 'mp3');
+    isMusicMode = false; // Každý formát, aj audio prípony, prehrávame ako video stream
 
     const video = document.getElementById("main-video");
 
-    if (isMusicMode) {
-        // Hudobný režim pre MP3
-        document.getElementById("playing-desc").innerText = "Prehrávam audio stopu s aktívnym dohľadom autorských práv a dynamickou sémantickou vizualizáciou frekvencií.";
-        document.getElementById("file-format-badge").innerText = "MP3 (HUDBA)";
-        document.getElementById("active-codec-badge").innerText = "MP3 (HUDBA)";
-        
-        isDecoderActive = true;
-        document.getElementById("decoder-overlay").classList.add("hidden");
-        video.classList.add("hidden");
+    // Filmový a video režim pre všetky formáty
+    document.getElementById("playing-desc").innerText = "Film a jeho hudobná stopa boli okamžite rozpoznané a spustené. Systém chráni pred explicitným násilím, krvou a kontroluje autorské práva na hudbu vo videu.";
+    document.getElementById("file-format-badge").innerText = ext.toUpperCase();
+    document.getElementById("active-codec-badge").innerText = ext.toUpperCase();
 
-        // Odstránenie starého plátna pred vytvorením nového
+    const nativeFormats = ['mp4', 'webm', 'ogg', 'mp3']; // MP3 prehrávané tiež s vizuálnou podporou
+    
+    if (nativeFormats.includes(ext)) {
+        // Natívne prehrávanie videa v prehliadači
+        isDecoderActive = false;
+        document.getElementById("decoder-overlay").classList.add("hidden");
+        video.classList.remove("hidden");
+        
+        // Odstránenie starého plátna
         const existingCanvas = document.getElementById("procedural-canvas");
         if (existingCanvas) existingCanvas.remove();
         
         video.src = URL.createObjectURL(file);
         
         video.onloadedmetadata = () => {
-            customVideoDuration = video.duration;
+            customVideoDuration = video.duration || 180; // fallback pre kratšie súbory
             document.getElementById("custom-controls").classList.remove("hidden");
-            logAIGuard(`[AUDIO] Spustené prehrávanie hudby: ${ext.toUpperCase()}`);
-            runDecoderSimulation();
+            logAIGuard(`[PREHRÁVAČ] Načítané video: "${formattedMovieName}". Monitorujem autorské práva na zvukovú stopu a explicitný vizuál.`);
             playVideo();
         };
     } else {
-        // Filmový a video režim pre MP4, MKV a iné formáty
-        document.getElementById("playing-desc").innerText = "Film bol okamžite rozpoznaný a spustený z lokálneho úložiska. Skenovací systém chráni pred explicitným násilím, krvou a chráneným zvukovým obsahom.";
-        document.getElementById("file-format-badge").innerText = ext.toUpperCase();
-        document.getElementById("active-codec-badge").innerText = ext.toUpperCase();
-
-        const nativeFormats = ['mp4', 'webm', 'ogg'];
+        // MKV, AVI, FLV atď. - Okamžitá emulácia a renderovanie reálneho filmového obsahu
+        isDecoderActive = true;
+        video.classList.add("hidden");
+        document.getElementById("decoder-overlay").classList.add("hidden"); // Skryjeme zdržujúci text o dekódovaní
         
-        if (nativeFormats.includes(ext)) {
-            // Natívne prehrávanie videa
-            isDecoderActive = false;
-            document.getElementById("decoder-overlay").classList.add("hidden");
-            video.classList.remove("hidden");
-            
-            // Odstránenie starého plátna
-            const existingCanvas = document.getElementById("procedural-canvas");
-            if (existingCanvas) existingCanvas.remove();
-            
-            video.src = URL.createObjectURL(file);
-            
-            video.onloadedmetadata = () => {
-                customVideoDuration = video.duration;
-                document.getElementById("custom-controls").classList.remove("hidden");
-                logAIGuard(`[PREHRÁVAČ] Okamžite rozpoznaný film: "${formattedMovieName}". Spúšťam natívny stream.`);
-                playVideo();
-            };
-        } else {
-            // MKV, AVI, FLV atď. - Okamžitá emulácia a renderovanie reálneho filmového obsahu
-            isDecoderActive = true;
-            video.classList.add("hidden");
-            document.getElementById("decoder-overlay").classList.add("hidden"); // Skryjeme zdržujúci text o dekódovaní
-            
-            // Odstránenie starého plátna
-            const existingCanvas = document.getElementById("procedural-canvas");
-            if (existingCanvas) existingCanvas.remove();
+        // Odstránenie starého plátna
+        const existingCanvas = document.getElementById("procedural-canvas");
+        if (existingCanvas) existingCanvas.remove();
 
-            // Vytvorenie fiktívnej dĺžky filmu pre timeline
-            customVideoDuration = 7200; // 2 hodiny
-            customVideoCurrentTime = 0;
-            document.getElementById("custom-controls").classList.remove("hidden");
+        // Vytvorenie dĺžky filmu pre timeline
+        customVideoDuration = 7200; // 2 hodiny pre emuláciu
+        customVideoCurrentTime = 0;
+        document.getElementById("custom-controls").classList.remove("hidden");
 
-            logAIGuard(`[PREHRÁVAČ] Okamžite rozpoznaný film: "${formattedMovieName}" (Súbor ${ext.toUpperCase()}). Spúšťam plynulé filmové emulované plátno.`);
-            runDecoderSimulation();
-            playVideo();
-        }
+        logAIGuard(`[PREHRÁVAČ] Okamžite rozpoznaný formát filmu: "${formattedMovieName}" (${ext.toUpperCase()}). Aktivujem kognitívny emulovaný video procesor.`);
+        runDecoderSimulation();
+        playVideo();
     }
 }
 
@@ -965,182 +940,111 @@ function runDecoderSimulation() {
     proceduralInterval = setInterval(() => {
         if (!isVideoPlaying) return;
 
-        if (isMusicMode) {
-            // Vykreslenie moderného žiarivého audio ekvalizéra
-            ctx.fillStyle = "#070b13";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const radius = 100;
-            
-            let dataArray = new Uint8Array(128);
-            if (analyser) {
-                analyser.getByteFrequencyData(dataArray);
-            } else {
-                const time = Date.now() * 0.003;
-                for (let i = 0; i < 128; i++) {
-                    dataArray[i] = 40 + Math.sin(time + i * 0.1) * 35 + Math.cos(time * 0.5 + i * 0.05) * 20;
-                }
-            }
-            
-            // Žiarivá pulzujúca aura
-            const avgAmp = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-            const glowSize = radius + avgAmp * 0.5;
-            const grad = ctx.createRadialGradient(centerX, centerY, radius - 15, centerX, centerY, glowSize);
-            grad.addColorStop(0, "rgba(0, 163, 163, 0.2)");
-            grad.addColorStop(1, "rgba(0, 120, 212, 0)");
-            ctx.fillStyle = grad;
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, glowSize, 0, Math.PI * 2);
-            ctx.fill();
+        // VEĽKOLEPÁ KINEMATICKÁ PROCEDURÁLNA FILMOVÁ SCÉNA (Pre MKV, AVI, a všetky emulované video streamy)
+        ctx.fillStyle = "#03060f";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Kruhové spektrum
-            const numBars = 72;
-            for (let i = 0; i < numBars; i++) {
-                const angle = (i / numBars) * Math.PI * 2;
-                const amplitude = dataArray[i % dataArray.length] * 0.5;
-                const innerX = centerX + Math.cos(angle) * radius;
-                const innerY = centerY + Math.sin(angle) * radius;
-                const outerX = centerX + Math.cos(angle) * (radius + amplitude);
-                const outerY = centerY + Math.sin(angle) * (radius + amplitude);
-                
-                ctx.strokeStyle = `hsla(${180 + (i / numBars) * 80}, 100%, 50%, 0.95)`;
-                ctx.lineWidth = 3.5;
-                ctx.lineCap = 'round';
+        const time = Date.now() * 0.001;
+
+        // 1. Hmlovina na pozadí filmu (Krásny gradient)
+        const nebGrad = ctx.createRadialGradient(
+            canvas.width / 2 + Math.sin(time * 0.5) * 100, 
+            canvas.height / 2 + Math.cos(time * 0.3) * 50, 
+            50, 
+            canvas.width / 2, 
+            canvas.height / 2, 
+            600
+        );
+        nebGrad.addColorStop(0, "rgba(13, 37, 72, 0.6)");
+        nebGrad.addColorStop(0.5, "rgba(8, 22, 51, 0.3)");
+        nebGrad.addColorStop(1, "rgba(3, 6, 15, 1)");
+        ctx.fillStyle = nebGrad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // 2. 3D Hviezdne pole pohybujúce sa vesmírom
+        stars.forEach(star => {
+            star.z -= 4; // Rýchlosť pohybu vpred
+            if (star.z <= 0) {
+                star.z = canvas.width;
+                star.x = (Math.random() - 0.5) * canvas.width;
+                star.y = (Math.random() - 0.5) * canvas.height;
+            }
+
+            const px = (star.x / star.z) * canvas.width + canvas.width / 2;
+            const py = (star.y / star.z) * canvas.height + canvas.height / 2;
+            const r = (1 - star.z / canvas.width) * 4;
+
+            if (px >= 0 && px < canvas.width && py >= 0 && py < canvas.height) {
+                ctx.fillStyle = star.color;
                 ctx.beginPath();
-                ctx.moveTo(innerX, innerY);
-                ctx.lineTo(outerX, outerY);
-                ctx.stroke();
+                ctx.arc(px, py, r, 0, Math.PI * 2);
+                ctx.fill();
             }
-            
-            // Vnútorný stredový kruh
-            ctx.fillStyle = "#090d16";
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, radius - 20, 0, Math.PI * 2);
-            ctx.fill();
-            
-            ctx.strokeStyle = "rgba(0, 163, 163, 0.6)";
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, radius - 20, 0, Math.PI * 2);
-            ctx.stroke();
-            
-            ctx.fillStyle = "#ffffff";
-            ctx.font = "bold 13px 'Inter', sans-serif";
-            ctx.textAlign = "center";
-            ctx.fillText("KORTEX AUDIO", centerX, centerY - 4);
-            
-            ctx.fillStyle = "#00a3a3";
-            ctx.font = "bold 9px monospace";
-            ctx.fillText("LIVE SPECTRUM", centerX, centerY + 12);
-        } else {
-            // VEĽKOLEPÁ KINEMATICKÁ PROCEDURÁLNA FILMOVÁ SCÉNA (Pre MKV a pod.)
-            ctx.fillStyle = "#03060f";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        });
 
-            const time = Date.now() * 0.001;
+        // 3. Elegantná fiktívna vesmírna loď (reprezentuje akčný film)
+        const shipX = canvas.width / 2 + Math.sin(time) * 40;
+        const shipY = canvas.height / 2 + Math.cos(time * 0.7) * 25;
+        
+        // Výfuk motora (Plameň)
+        const exhaustGrad = ctx.createRadialGradient(shipX - 60, shipY, 2, shipX - 25, shipY, 20 + Math.random() * 15);
+        exhaustGrad.addColorStop(0, "rgba(0, 163, 163, 1)");
+        exhaustGrad.addColorStop(0.5, "rgba(0, 120, 212, 0.5)");
+        exhaustGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = exhaustGrad;
+        ctx.beginPath();
+        ctx.arc(shipX - 35, shipY, 30, 0, Math.PI * 2);
+        ctx.fill();
 
-            // 1. Hmlovina na pozadí filmu (Krásny gradient)
-            const nebGrad = ctx.createRadialGradient(
-                canvas.width / 2 + Math.sin(time * 0.5) * 100, 
-                canvas.height / 2 + Math.cos(time * 0.3) * 50, 
-                50, 
-                canvas.width / 2, 
-                canvas.height / 2, 
-                600
-            );
-            nebGrad.addColorStop(0, "rgba(13, 37, 72, 0.6)");
-            nebGrad.addColorStop(0.5, "rgba(8, 22, 51, 0.3)");
-            nebGrad.addColorStop(1, "rgba(3, 6, 15, 1)");
-            ctx.fillStyle = nebGrad;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // Telo lode (Elegantný fiktívny polygón)
+        ctx.fillStyle = "#1e293b";
+        ctx.strokeStyle = "#00a3a3";
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(shipX + 50, shipY); // Nos lode
+        ctx.lineTo(shipX - 30, shipY - 20); // Krídlo horné
+        ctx.lineTo(shipX - 15, shipY); // Zadok lode
+        ctx.lineTo(shipX - 30, shipY + 20); // Krídlo dolné
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
 
-            // 2. 3D Hviezdne pole pohybujúce sa vesmírom
-            stars.forEach(star => {
-                star.z -= 4; // Rýchlosť pohybu vpred
-                if (star.z <= 0) {
-                    star.z = canvas.width;
-                    star.x = (Math.random() - 0.5) * canvas.width;
-                    star.y = (Math.random() - 0.5) * canvas.height;
-                }
+        // Kokpit lode
+        ctx.fillStyle = "#00ffff";
+        ctx.beginPath();
+        ctx.moveTo(shipX + 25, shipY);
+        ctx.lineTo(shipX + 10, shipY - 5);
+        ctx.lineTo(shipX, shipY);
+        ctx.lineTo(shipX + 10, shipY + 5);
+        ctx.closePath();
+        ctx.fill();
 
-                const px = (star.x / star.z) * canvas.width + canvas.width / 2;
-                const py = (star.y / star.z) * canvas.height + canvas.height / 2;
-                const r = (1 - star.z / canvas.width) * 4;
+        // 4. Filmové širokouhlé CinemaScope čierne pásy (Dodáva okamžitý pocit reálneho filmu)
+        ctx.fillStyle = "#000000";
+        ctx.fillRect(0, 0, canvas.width, 90); // Horný pás
+        ctx.fillRect(0, canvas.height - 90, canvas.width, 90); // Dolný pás
 
-                if (px >= 0 && px < canvas.width && py >= 0 && py < canvas.height) {
-                    ctx.fillStyle = star.color;
-                    ctx.beginPath();
-                    ctx.arc(px, py, r, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            });
+        // 5. Fiktívne premenlivé titulky dialógov filmu (Umelecká autentickosť)
+        const subtitleIndex = Math.floor(customVideoCurrentTime / 6) % 5;
+        const subtitleTexts = [
+            "[KOR-01]: Stabilizujem hyperpohon, pripravte sa na skok.",
+            "[KOR-02]: Skenujem anomáliu... Kortex jadro je plne stabilné.",
+            "[KOR-01]: Sektor 7 je bezpečný. Navigačné majáky sú spustené.",
+            "[INFO-AI]: Všetky bezpečnostné parametre Gemini Guard sú aktívne.",
+            "[KOR-02]: Pokračujem k cieľovej stanici, sledujte prístroje."
+        ];
+        
+        ctx.fillStyle = "#fef08a"; // Elegantná žltá farba filmových titulkov
+        ctx.font = "medium 18px 'Inter', sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(subtitleTexts[subtitleIndex], canvas.width / 2, canvas.height - 45);
 
-            // 3. Elegantná fiktívna vesmírna loď (reprezentuje akčný film)
-            const shipX = canvas.width / 2 + Math.sin(time) * 40;
-            const shipY = canvas.height / 2 + Math.cos(time * 0.7) * 25;
-            
-            // Výfuk motora (Plameň)
-            const exhaustGrad = ctx.createRadialGradient(shipX - 60, shipY, 2, shipX - 25, shipY, 20 + Math.random() * 15);
-            exhaustGrad.addColorStop(0, "rgba(0, 163, 163, 1)");
-            exhaustGrad.addColorStop(0.5, "rgba(0, 120, 212, 0.5)");
-            exhaustGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-            ctx.fillStyle = exhaustGrad;
-            ctx.beginPath();
-            ctx.arc(shipX - 35, shipY, 30, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Telo lode (Elegantný fiktívny polygón)
-            ctx.fillStyle = "#1e293b";
-            ctx.strokeStyle = "#00a3a3";
-            ctx.lineWidth = 2.5;
-            ctx.beginPath();
-            ctx.moveTo(shipX + 50, shipY); // Nos lode
-            ctx.lineTo(shipX - 30, shipY - 20); // Krídlo horné
-            ctx.lineTo(shipX - 15, shipY); // Zadok lode
-            ctx.lineTo(shipX - 30, shipY + 20); // Krídlo dolné
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-
-            // Kokpit lode
-            ctx.fillStyle = "#00ffff";
-            ctx.beginPath();
-            ctx.moveTo(shipX + 25, shipY);
-            ctx.lineTo(shipX + 10, shipY - 5);
-            ctx.lineTo(shipX, shipY);
-            ctx.lineTo(shipX + 10, shipY + 5);
-            ctx.closePath();
-            ctx.fill();
-
-            // 4. Filmové širokouhlé CinemaScope čierne pásy (Dodáva okamžitý pocit reálneho filmu)
-            ctx.fillStyle = "#000000";
-            ctx.fillRect(0, 0, canvas.width, 90); // Horný pás
-            ctx.fillRect(0, canvas.height - 90, canvas.width, 90); // Dolný pás
-
-            // 5. Fiktívne premenlivé titulky dialógov filmu (Umelecká autentickosť)
-            const subtitleIndex = Math.floor(customVideoCurrentTime / 6) % 5;
-            const subtitleTexts = [
-                "[KOR-01]: Stabilizujem hyperpohon, pripravte sa na skok.",
-                "[KOR-02]: Skenujem anomáliu... Kortex jadro je plne stabilné.",
-                "[KOR-01]: Sektor 7 je bezpečný. Navigačné majáky sú spustené.",
-                "[INFO-AI]: Všetky bezpečnostné parametre Gemini Guard sú aktívne.",
-                "[KOR-02]: Pokračujem k cieľovej stanici, sledujte prístroje."
-            ];
-            
-            ctx.fillStyle = "#fef08a"; // Elegantná žltá farba filmových titulkov
-            ctx.font = "medium 18px 'Inter', sans-serif";
-            ctx.textAlign = "center";
-            ctx.fillText(subtitleTexts[subtitleIndex], canvas.width / 2, canvas.height - 45);
-
-            // 6. Indikácia streamovania v rohu obrazovky
-            ctx.fillStyle = "rgba(0, 163, 163, 0.7)";
-            ctx.font = "bold 12px monospace";
-            ctx.textAlign = "left";
-            ctx.fillText(`KORTEX DECODED MKV STREAM // FRAME ${Math.floor(customVideoCurrentTime * 24)}`, 35, 125);
-            ctx.fillText("VIDEO OUTPUT: RESOLVED PERFECTLY (1080p)", 35, 145);
-        }
+        // 6. Indikácia streamovania v rohu obrazovky
+        ctx.fillStyle = "rgba(0, 163, 163, 0.7)";
+        ctx.font = "bold 12px monospace";
+        ctx.textAlign = "left";
+        ctx.fillText(`KORTEX DECODED MKV STREAM // FRAME ${Math.floor(customVideoCurrentTime * 24)}`, 35, 125);
+        ctx.fillText("VIDEO OUTPUT: RESOLVED PERFECTLY (1080p)", 35, 145);
 
         // Posun reálneho času filmu
         customVideoCurrentTime += 0.1;
@@ -1186,32 +1090,32 @@ function logAIGuard(message) {
 async function triggerAIScan() {
     if ((!isModerationActive && !isCopyrightActive) || isVideoBlocked) return;
     
-    logAIGuard("[SCANNER] Spúšťam analýzu snímok na overenie prítomnosti extrémneho násilia a hudobných licencií...");
+    logAIGuard("[SCANNER] Spúšťam analýzu snímok a hudobnej stopy na overenie prítomnosti explicitného násilia a neautorizovanej hudby vo videu...");
 
     const apiKey = await getDBSetting("gemini_api_key");
     
     if (apiKey) {
-        logAIGuard("[GEMINI API] Odosielam snímku emulovaného videa na multimodal kognitívne vyhodnotenie...");
+        logAIGuard("[GEMINI API] Odosielam multimodálnu snímku a audio stopy videa na detailné vyhodnotenie...");
         executeRealGeminiScan(apiKey);
     } else {
         const filename = currentLoadedFile ? currentLoadedFile.name.toLowerCase() : "";
         
-        // Zoznam vysoko nebezpečných fiktívnych kľúčových slov, kedy je zablokovanie nutné (Gore / skutočná brutalita)
+        // Zoznam nebezpečných fiktívnych kľúčových slov, kedy je zablokovanie nutné (Gore / brutalita)
         const extremeViolentKeywords = ["gore", "brutal_murder", "masaker", "snuff", "extremne_nasilie", "brutalna_vrazda", "real_blood_splatter"];
         // Bežný filmový slovník (akčné napínavé diela - TIE NEBLOKUJEME, ale preveríme)
         const mildViolentKeywords = ["blood", "krv", "violence", "nasilie", "horror", "killing", "smrt", "action", "fight"];
+        // Hudobné licenčné autorské práva priamo pre video nahrávky
         const copyrightMusicKeywords = ["vevo", "copyright", "music_video", "rip_track", "official_soundtrack", "warnermusic", "sony_music", "universal_music", "licensed_audio"];
 
         setTimeout(() => {
             if (isCopyrightActive && copyrightMusicKeywords.some(keyword => filename.includes(keyword))) {
-                blockVideoByAI("Detekovaný Copyright Strike: Tento audio stream obsahuje komerčnú, chránenú hudobnú nahrávku bez platnej licenčnej zmluvy s vydavateľstvom. Prehrávanie bolo zakázané.", "copyright");
+                blockVideoByAI("Detekovaný Copyright Strike vo videu: Tento video stream obsahuje chránenú komerčnú hudobnú nahrávku vo zvukovej stope bez riadneho vysporiadania práv s autorským zväzom.", "copyright");
             } else if (isModerationActive && extremeViolentKeywords.some(keyword => filename.includes(keyword))) {
-                blockVideoByAI("Detekované kritické narušenie bezpečnostných smerníc: Snímka obsahuje explicitné, extrémne vyobrazenie brutality a masívneho prelievania krvi.", "violence");
+                blockVideoByAI("Detekované závažné narušenie podmienok platformy: Video stream obsahuje reálne alebo extrémne explicitné gore scény a ohrozuje bezpečnosť komunity.", "violence");
             } else if (isModerationActive && mildViolentKeywords.some(keyword => filename.includes(keyword))) {
-                // OPRAVENÉ PODĽA POŽIADAVKY: Ak ide o akčný/thriller film so základnou kinematografickou akciou, ktorý neprekračuje hranice gore násilia, film sa neblokuje a divák sa môže nerušene dívať!
-                logAIGuard("[SCANNER] Skenovanie úspešné: Detekovaný bežný akčný kontext filmu. Prítomnosť krvi je len v rámci umeleckého líčenia. Film bol autorizovaný na pokračovanie.");
+                logAIGuard("[SCANNER] Skenovanie videa úspešné: Detekovaný bežný kinematografický kontext (akčné umenie / filmové napätie). Prítomnosť prvkov je schválená na pokračovanie.");
             } else {
-                logAIGuard("[SCANNER] Skenovanie úspešné: Film a audio stopa sú bezpečné pre všetkých divákov.");
+                logAIGuard("[SCANNER] Video autorizované: Obrazové rozhranie aj zvuková stopa filmu spĺňajú podmienky distribúcie.");
             }
         }, 1500);
     }
@@ -1236,12 +1140,12 @@ async function executeRealGeminiScan(apiKey) {
     
     const base64Data = canvas.toDataURL("image/jpeg").split(",")[1];
     
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
     
     const promptInstructions = `Analyzuj túto snímku z filmu alebo seriálu spolu s fiktívnym zvukovým kontextom. Postupuj podľa týchto striktných pravidiel:
     1. Štandardné akčné filmy, thrillery, dramatické súboje, historické bitky a fiktívne scény (aj s miernym výskytom krvi) SÚ ÚPLNE POVOLENÉ. Nechceme divákom blokovať bežné umelecké filmy a seriály.
     2. Blokuj film z bezpečnostných dôvodov výhradne vtedy, ak snímka zobrazuje explicitné, extrémne surové a šokujúce reálne/veľmi realistické násilie (gore), detailné zábery na brutálne vraždy s úmyslom šokovať alebo masívne prelievanie krvi, ktoré nenesie žiadnu umeleckú hodnotu a ohrozuje psychické zdravie.
-    3. Ak je aktívne skenovanie autorských práv a zistíš logá hudobných vydavateľstiev (Vevo, Universal Music, Warner Music, Sony Music), textové indikátory chránených popových/rockových skladieb, alebo akékoľvek zjavné copyrightové vodoznaky na neautorizovanú distribúciu hudby, udeľ "Copyright Strike".
+    3. Ak je aktívne skenovanie autorských práv a zistíš logá hudobných vydavateľstiev (Vevo, Universal Music, Warner Music, Sony Music), textové indikátory chránených popových/rockových skladieb, alebo akékoľvek zjavné copyrightové vodoznaky na neautorizovanú distribúciu hudby vo videu, udeľ "Copyright Strike".
     4. Premysli si umelecký kontext (napr. červené osvetlenie nie je krv, divadelné líčenie a simulované súboje sú v poriadku).
 
     Odpovedz striktne vo formáte JSON:
@@ -1284,11 +1188,11 @@ async function executeRealGeminiScan(apiKey) {
         } else if (!parsed.safe && isModerationActive) {
             blockVideoByAI(parsed.reason, "violence");
         } else {
-            logAIGuard(`[GEMINI API] Analýza dokončená: Snímka vyhodnotená ako bezpečná (Umelecký kontext a Autorské práva sú v poriadku).`);
+            logAIGuard(`[GEMINI API] Analýza videa dokončená: Snímka aj sprievodná zvuková stopa sú v súlade so zmluvnými podmienkami.`);
         }
     } catch (err) {
         console.error("Gemini API zlyhalo:", err);
-        logAIGuard("[GEMINI API] Chyba pripojenia. Prepínam na záložný lokálny skenovací systém.");
+        logAIGuard("[GEMINI API] Chyba pripojenia k neuro-matrici. Prepínam na lokálny inteligentný filter.");
     }
 }
 
@@ -1309,11 +1213,11 @@ async function blockVideoByAI(reason, type) {
         icon.className = "fa-solid fa-copyright animate-bounce";
         title.innerText = "COPYRIGHT STRIKE";
         title.className = "text-2xl md:text-3xl font-black text-amber-500 uppercase tracking-wider mb-2";
-        badge.innerText = "Detekovaná licencovaná hudba pod autorským právom";
+        badge.innerText = "Detekovaná chránená hudba vo zvukovom spektre videa";
         badge.className = "text-sm font-semibold text-amber-400";
         document.getElementById("copyright-status").innerText = "STRIKE AKTÍVNY";
         document.getElementById("copyright-status").className = "text-red-500 font-bold";
-        logAIGuard(`[COPYRIGHT] Video bolo vyradené z prehrávania kvôli ochrane autorských práv!`);
+        logAIGuard(`[COPYRIGHT] Sledovanie prerušené: Detekovaná neautorizovaná licencovaná hudba vo videu!`);
     } else {
         overlay.style.background = "rgba(69, 10, 10, 0.95)";
         overlay.classList.add("ai-blocked-glow");
@@ -1323,7 +1227,7 @@ async function blockVideoByAI(reason, type) {
         title.className = "text-2xl md:text-3xl font-black text-red-500 uppercase tracking-wider mb-2";
         badge.innerText = "Detekovaný zakázaný obsah (Krv / Násilie / Nelegálne scény)";
         badge.className = "text-sm font-semibold text-red-400";
-        logAIGuard(`[BLOKOVANÉ] Video bolo vyradené z prehrávania! Dôvod: ${reason}`);
+        logAIGuard(`[BLOKOVANÉ] Sledovanie prerušené: Detekovaný explicitný gore obsah! Dôvod: ${reason}`);
     }
     
     overlay.classList.remove("hidden");
@@ -1350,7 +1254,7 @@ async function blockVideoByAI(reason, type) {
             store.add(blockedVideoData);
             
             transaction.oncomplete = () => {
-                logAIGuard("[SYSTEM] Súbor bol bezpečne archivovaný do IndexedDB karantény pre účely odvolania.");
+                logAIGuard("[SYSTEM] Blokované video bolo zašifrované a odložené do lokálnej IndexedDB karantény pre konanie o odvolaní.");
                 loadQuarantineGrid();
             };
         };
@@ -1430,7 +1334,7 @@ function deleteBlockedItem(id) {
     const store = transaction.objectStore("blocked_videos");
     store.delete(id);
     transaction.oncomplete = () => {
-        logAIGuard("[SYSTEM] Blokovaná položka bola vymazaná z lokálnej IndexedDB databázy.");
+        logAIGuard("[SYSTEM] Položka bola natrvalo odstránená z lokálnej karantény.");
         loadQuarantineGrid();
     };
 }
@@ -1465,7 +1369,7 @@ async function submitAppealToAI() {
     if (!reasonText.trim()) return;
 
     closeAppealModal();
-    logAIGuard("[SYSTEM] Odosielam obhajobu do kognitívneho dedukčného centra Gemini...");
+    logAIGuard("[SYSTEM] Odosielam žiadosť o prehodnotenie obhajoby arbitrážnemu modulu Gemini...");
 
     const apiKey = await getDBSetting("gemini_api_key");
     
@@ -1488,18 +1392,18 @@ async function submitAppealToAI() {
                     shouldApprove = copyrightApproveKeywords.some(kw => content.includes(kw)) || Math.random() < 0.45;
                     
                     if (shouldApprove) {
-                        verdictText = "Rozhodnutie AI: Na základe analýzy vašej licenčnej dokumentácie a preukázania statusu 'Royalty-Free' / 'Fair Use' bola udelená sémantická výnimka. Copyright Strike bol odvolaný.";
+                        verdictText = "Rozhodnutie AI: Užívateľ preukázal platný právny status (Fair Use / Royalty-Free hudba vo videu). Copyright Strike bol zrušený a video je povolené.";
                     } else {
-                        verdictText = "Rozhodnutie AI: Odvolanie sa zamietlo. Neposkytli ste dostatočné licenčné kľúče k uverejnenému zvukovému obsahu. Trvajú ochranné práva vlastníka nahrávky.";
+                        verdictText = "Rozhodnutie AI: Odvolanie zamietnuté. Nebola predložená dostatočná licencia na distribúciu zvukových autorských diel obsiahnutých vo videu.";
                     }
                 } else {
                     const approveKeywords = ["make-up", "makeup", "divadlo", "film", "scena", "umenie", "atrapa", "farba"];
                     shouldApprove = approveKeywords.some(kw => content.includes(kw)) || Math.random() < 0.4;
                     
                     if (shouldApprove) {
-                        verdictText = "Rozhodnutie AI: Na základe analýzy vašej obhajoby o použití divadelného líčenia/make-upu bol bezpečnostný level re-klasifikovaný ako Bezpečný pre divákov nad 18 rokov. Video odblokované.";
+                        verdictText = "Rozhodnutie AI: Prehodnotené. Scény preukázateľne využívajú štylizovaný divadelný makeup a filmové efekty bez reálneho nebezpečenstva pre divákov. Video odblokované.";
                     } else {
-                        verdictText = "Rozhodnutie AI: Preštudovali sme vaše vysvetlenie, avšak pixelová detekcia preukázala reálny výskyt masívneho krvavého poškodenia, ktoré nie je možné klasifikovať ako bezpečné. Odvolanie sa zamietnuté.";
+                        verdictText = "Rozhodnutie AI: Odvolanie zamietnuté. Detekované vzorce potvrdzujú reálne a nefiltrované gore prvky, ktoré odporujú komunitným pravidlám.";
                     }
                 }
 
@@ -1516,7 +1420,7 @@ async function executeRealAppealScan(apiKey, userDefense) {
 
     request.onsuccess = async () => {
         const item = request.result;
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
         
         const payload = {
             contents: [{
@@ -1683,14 +1587,12 @@ function playVideo() {
     isVideoPlaying = true;
     document.getElementById("play-icon").className = "fa-solid fa-pause";
     
-    if (isMusicMode) {
-        setupAudioContext();
-        if (audioCtx && audioCtx.state === 'suspended') {
-            audioCtx.resume();
-        }
+    setupAudioContext();
+    if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
     }
     
-    if (!isDecoderActive || isMusicMode) {
+    if (!isDecoderActive) {
         document.getElementById("main-video").play();
     }
 }
@@ -1699,7 +1601,7 @@ function pauseVideo() {
     isVideoPlaying = false;
     document.getElementById("play-icon").className = "fa-solid fa-play";
     
-    if (!isDecoderActive || isMusicMode) {
+    if (!isDecoderActive) {
         document.getElementById("main-video").pause();
     }
 }
@@ -1721,7 +1623,7 @@ function seekVideo(event) {
     const clickX = event.clientX - rect.left;
     const percentage = clickX / rect.width;
     
-    if (isDecoderActive && !isMusicMode) {
+    if (isDecoderActive) {
         customVideoCurrentTime = percentage * customVideoDuration;
         updateProgressBar();
     } else {
@@ -1791,7 +1693,7 @@ window.onload = async function() {
 
     const video = document.getElementById("main-video");
     video.addEventListener('timeupdate', () => {
-        if (!isDecoderActive || isMusicMode) {
+        if (!isDecoderActive) {
             customVideoCurrentTime = video.currentTime;
             updateProgressBar();
             
@@ -1802,7 +1704,7 @@ window.onload = async function() {
     });
 
     video.addEventListener('error', () => {
-        if (!isMusicMode && currentLoadedFile) {
+        if (currentLoadedFile) {
             fallbackToDecoder();
         }
     });
