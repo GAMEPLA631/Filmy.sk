@@ -11,7 +11,7 @@
     <!-- FontAwesome pre prémiové ikony -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts - Inter pre modernú čitateľnosť -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2%family=Inter:wght=300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <script>
         tailwind.config = {
@@ -64,6 +64,14 @@
         }
         .ai-blocked-glow {
             animation: pulse-red 2s infinite;
+        }
+        /* Plávajúce animované upozornenie pre Copyright Claim */
+        @keyframes slide-down {
+            0% { transform: translateY(-100%); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        .claim-banner-anim {
+            animation: slide-down 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
     </style>
 </head>
@@ -127,6 +135,22 @@
             
             <!-- Video Element -->
             <video id="main-video" class="w-full h-full object-contain hidden" crossorigin="anonymous"></video>
+
+            <!-- Plávajúci Banner pre Copyright Claim (Prehrávanie povolené, no obmedzené) -->
+            <div id="copyright-claim-banner" class="absolute top-4 left-4 right-4 bg-amber-950/90 border border-amber-500/50 rounded-xl p-3 flex items-center justify-between gap-3 shadow-2xl z-30 hidden claim-banner-anim">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500">
+                        <i class="fa-solid fa-copyright"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Detekovaný Copyright Claim (Nárok)</h4>
+                        <p class="text-[10px] text-slate-300 leading-tight">Vo videu bola nájdená chránená hudba. Prehrávanie je povolené s obmedzením monetizácie.</p>
+                    </div>
+                </div>
+                <button onclick="dismissClaimBanner()" class="text-slate-400 hover:text-white text-xs px-2.5 py-1 bg-slate-900/60 hover:bg-slate-800 border border-slate-800 rounded-lg transition-all">
+                    Rozumiem
+                </button>
+            </div>
             
             <!-- Simulovaný/Univerzálny dekodér pre nepodporované video formáty (napr. AVI, MKV, FLV) -->
             <div id="decoder-overlay" class="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center p-6 hidden z-10">
@@ -203,7 +227,7 @@
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-4">
                         <button onclick="togglePlay()" class="text-white hover:text-microsoft-blue transition-colors text-sm">
-                            <i id="play-icon" class="fa-solid fa-pause"></i>
+                            <i id="play-icon" class="fa-solid fa-play"></i>
                         </button>
                         <span id="time-display" class="text-[11px] font-mono text-slate-400">00:00 / 00:00</span>
                     </div>
@@ -234,20 +258,114 @@
         <!-- Vstupy a metadáta o aktuálnom filme -->
         <input type="file" id="file-input" class="hidden" accept="*/*" onchange="handleFileSelect(event)">
         
-        <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 backdrop-blur-sm">
-            <div class="flex-1">
-                <h1 id="playing-title" class="text-xl font-bold tracking-tight text-white mb-1">Žiadny prehrávaný film</h1>
-                <p id="playing-desc" class="text-xs text-slate-400 leading-relaxed">Platforma analyzuje každý nahraný film pomocou lokálneho heuristického modelu Kortex AI. Súbory z vášho zariadenia sa z bezpečnostných a kapacitných dôvodov na servery neukladajú, s výnimkou tých, ktoré boli identifikované ako škodlivé.</p>
-                <div class="flex items-center gap-3 mt-3 flex-wrap">
-                    <span id="file-format-badge" class="bg-slate-950 border border-slate-800 text-[10px] font-mono text-slate-400 px-2.5 py-1 rounded-lg">Bez formátu</span>
-                    <span id="file-size-badge" class="bg-slate-950 border border-slate-800 text-[10px] font-mono text-slate-400 px-2.5 py-1 rounded-lg">0.00 MB</span>
+        <!-- Sekcia detailov, popisu videa a licenčných tabuliek -->
+        <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-6 flex flex-col gap-6 backdrop-blur-sm">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-800/60 pb-5">
+                <div class="flex-1">
+                    <h1 id="playing-title" class="text-xl font-bold tracking-tight text-white mb-1">Žiadny prehrávaný film</h1>
+                    <div class="flex items-center gap-3 mt-2 flex-wrap">
+                        <span id="file-format-badge" class="bg-slate-950 border border-slate-800 text-[10px] font-mono text-slate-400 px-2.5 py-1 rounded-lg">Bez formátu</span>
+                        <span id="file-size-badge" class="bg-slate-950 border border-slate-800 text-[10px] font-mono text-slate-400 px-2.5 py-1 rounded-lg">0.00 MB</span>
+                        <span id="licensing-badge" class="bg-emerald-950 border border-emerald-900 text-[10px] font-mono text-emerald-400 px-2.5 py-1 rounded-lg">Licencia: Bezpečná</span>
+                    </div>
+                </div>
+                
+                <!-- Tlačidlo na nahlásenie obsahu -->
+                <button onclick="openReportModal()" class="bg-slate-950 border border-red-900/30 hover:border-red-500/50 text-red-400 hover:bg-red-500/5 hover:text-red-300 text-xs font-semibold px-4 py-3 rounded-xl transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-flag"></i> Nahlásiť nevhodné video
+                </button>
+            </div>
+
+            <!-- Popis videa (Sektor s detailnými informáciami) -->
+            <div class="flex flex-col gap-2">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                    <i class="fa-solid fa-align-left text-microsoft-teal"></i> Popis videa a kognitívne metadáta
+                </h3>
+                <div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
+                    <p id="playing-desc" class="text-xs text-slate-400 leading-relaxed">
+                        Zariadenie je pripravené. Po nahratí lokálneho súboru Kortex AI prečíta štruktúru kontajnera, extrahuje sémantické tagy, určí fiktívne režijné informácie a vykoná bezpečnostný audit zvukovej i vizuálnej vrstvy.
+                    </p>
+                    <div id="video-specs-meta" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3 pt-3 border-t border-slate-900 text-[11px] font-mono hidden">
+                        <div>
+                            <span class="text-slate-500 block">REŽISÉR</span>
+                            <span class="text-slate-300 font-bold" id="meta-director">Kortex AI Creator</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-500 block">ROZLÍŠENIE</span>
+                            <span class="text-slate-300 font-bold" id="meta-resolution">1920x1080 (FHD)</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-500 block">Snímkovanie</span>
+                            <span class="text-slate-300 font-bold" id="meta-fps">24.00 FPS</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-500 block">Bezpečnostný status</span>
+                            <span class="text-emerald-400 font-bold" id="meta-safety">Overené</span>
+                        </div>
+                    </div>
                 </div>
             </div>
-            
-            <!-- Tlačidlo na nahlásenie obsahu -->
-            <button onclick="openReportModal()" class="bg-slate-950 border border-red-900/30 hover:border-red-500/50 text-red-400 hover:bg-red-500/5 hover:text-red-300 text-xs font-semibold px-4 py-3 rounded-xl transition-all flex items-center justify-center gap-2">
-                <i class="fa-solid fa-flag"></i> Nahlásiť nevhodné video
-            </button>
+
+            <!-- Licenčné Tabuľky (Dynamicky generované: Video / Audio) -->
+            <div class="flex flex-col gap-3">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                    <i class="fa-solid fa-file-contract text-microsoft-blue"></i> Správa Autorských Práv a Licencií
+                </h3>
+                
+                <div class="grid grid-cols-1 gap-4" id="license-tables-container">
+                    <!-- Tabuľka 1: Video licencia (Znak video 🎥) -->
+                    <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 overflow-x-auto">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="text-lg">🎥</span>
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-300">Video Licenčný Status</h4>
+                        </div>
+                        <table class="w-full text-[11px] font-mono text-left">
+                            <thead>
+                                <tr class="text-slate-500 border-b border-slate-900 pb-1.5">
+                                    <th class="pb-2">Kanál</th>
+                                    <th class="pb-2">Typ Práva</th>
+                                    <th class="pb-2">Overovateľ</th>
+                                    <th class="pb-2 text-right">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b border-slate-900/40">
+                                    <td class="py-2.5 font-bold text-slate-200">🎥 Obrazový prúd</td>
+                                    <td>Umelecká Kinematografia</td>
+                                    <td>Kortex Local AI</td>
+                                    <td class="text-right text-emerald-400 font-bold" id="video-license-status">Overený (Čistý)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Tabuľka 2: Audio licencia (Zobrazuje sa IBA ak je chytaná hudba/Copyright Claim - Znak 🎵) -->
+                    <div id="audio-license-table" class="bg-slate-950 border border-slate-800 rounded-xl p-4 overflow-x-auto hidden">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="text-lg">🎵</span>
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400">Audio Autorskoprávna Licencia (Claimed)</h4>
+                        </div>
+                        <table class="w-full text-[11px] font-mono text-left">
+                            <thead>
+                                <tr class="text-slate-500 border-b border-slate-900 pb-1.5">
+                                    <th class="pb-2">Komponent</th>
+                                    <th class="pb-2">Identifikovaná stopa</th>
+                                    <th class="pb-2">Vlastník Autorských Práv</th>
+                                    <th class="pb-2 text-right">Obmedzenie</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b border-slate-900/40">
+                                    <td class="py-2.5 font-bold text-slate-200">🎵 Zvukový sprievod</td>
+                                    <td id="audio-claim-track" class="text-amber-300">Neznáma skladba (Licensed Audio)</td>
+                                    <td id="audio-claim-owner" class="text-slate-300">Sony Music Entertainment</td>
+                                    <td class="text-right text-amber-500 font-bold">Iba Monetizácia (Hrá)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
 
     </section>
@@ -300,7 +418,7 @@
             </div>
         </div>
 
-        <!-- NOVÝ: Kortex AI Obsahový Analyzátor Panel -->
+        <!-- Kortex AI Obsahový Analyzátor Panel -->
         <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-5 backdrop-blur-sm flex flex-col gap-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
@@ -410,12 +528,21 @@
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-slate-800 pb-4">
             <div>
                 <h2 class="text-lg font-bold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-lock text-red-500"></i> Karanténa Blokovaného Obsahu
+                    <i class="fa-solid fa-lock text-red-500"></i> Karanténa a Lokálny Archív
                 </h2>
-                <p class="text-xs text-slate-400 mt-1">Tu sú uložené všetky videá, ktoré Kortex AI zablokovala ako nebezpečné (násilné / krvavé) alebo s porušením copyrightu. Sú v bezpečí zapísané v lokálnej IndexedDB databáze.</p>
+                <p class="text-xs text-slate-400 mt-1">Uložené a auditované záznamy s konštrukciou autorskoprávnych nárokov v bezpečnej databáze IndexedDB.</p>
             </div>
+            
+            <!-- Real-time Fulltextové Vyhľadávanie -->
+            <div class="relative w-full md:w-80">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500 text-xs">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </span>
+                <input type="text" id="quarantine-search-input" oninput="filterQuarantine()" placeholder="Hľadať podľa názvu alebo obmedzenia..." class="w-full bg-slate-950 border border-slate-850 hover:border-slate-700 focus:border-microsoft-blue focus:outline-none rounded-xl py-2 pl-9 pr-4 text-xs text-white transition-all">
+            </div>
+            
             <div class="flex items-center gap-2">
-                <span id="quarantine-count" class="bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-bold px-2.5 py-1 rounded-full">0 blokovaných filmov</span>
+                <span id="quarantine-count" class="bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-bold px-2.5 py-1 rounded-full">0 filmov v databáze</span>
             </div>
         </div>
 
@@ -660,7 +787,7 @@
             <i class="fa-solid fa-gavel"></i> Odvolacie konanie u Kortex AI
         </h3>
         <p class="text-xs text-slate-400">
-            Bolo vaše video neprávom zablokované? Popíšte dôvod, prečo by mala lokálna AI prehodnotiť označenie krvi, násilia alebo zvuku chráneného autorským právom. AI vykoná novú kognitívnu analýzu.
+            Bolo vaše video neprávom zablokované alebo obmedzené Copyright Claimom? Popíšte dôvod, prečo by mala lokálna AI prehodnotiť označenie krvi, násilia alebo zvuku. AI vykoná novú kognitívnu analýzu.
         </p>
 
         <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-[11px]">
@@ -708,6 +835,7 @@ let sourceConnected = false;
 let isModerationActive = true;
 let isCopyrightActive = true;
 let isVideoBlocked = false;
+let isVideoClaimed = false; // Nový stav: obmedzené prehrávanie bez blokovania
 let currentAppealId = null;
 
 // Predchádzajúce pixelové dáta pre detekciu pohybu
@@ -730,7 +858,7 @@ function initDB() {
         request.onupgradeneeded = (event) => {
             const dbInstance = event.target.result;
             
-            // Blokované videá (len tie, ktoré AI zablokovala)
+            // Blokované videá (len tie, ktoré AI zablokovala alebo uvalila Claim)
             if (!dbInstance.objectStoreNames.contains("blocked_videos")) {
                 dbInstance.createObjectStore("blocked_videos", { keyPath: "id", autoIncrement: true });
             }
@@ -971,8 +1099,17 @@ function handleFileSelect(event) {
 
     const video = document.getElementById("main-video");
 
-    // Filmový a video režim pre všetky formáty
-    document.getElementById("playing-desc").innerText = "Film a jeho hudobná stopa boli okamžite rozpoznané a spustené. Systém chráni pred explicitným násilím, krvou a kontroluje autorské práva na hudbu vo videu.";
+    // Aktualizácia textu v Popise Videa
+    document.getElementById("playing-desc").innerText = `Práve sledujete video súbor "${file.name}". Skenovací mechanizmus Kortex AI skontroluje licenciu tohto diela. Ak video obsahuje chránenú audio stopu, bude označené Copyright Claimom (stále zostane spustiteľné s obmedzením). Ak zistí reálne násilie a preliatu krv, bude okamžite prenesené do IndexedDB karantény.`;
+    
+    // Zobrazenie Kognitívnych Metadát
+    document.getElementById("meta-director").innerText = "Kortex Local Director";
+    document.getElementById("meta-resolution").innerText = isDecoderActive ? "1080p (Emulated)" : "Auto (HTML5)";
+    document.getElementById("meta-fps").innerText = "24.00 FPS";
+    document.getElementById("meta-safety").innerText = "Preveruje sa...";
+    document.getElementById("meta-safety").className = "text-amber-400 font-bold";
+    document.getElementById("video-specs-meta").classList.remove("hidden");
+
     document.getElementById("file-format-badge").innerText = ext.toUpperCase();
     document.getElementById("active-codec-badge").innerText = ext.toUpperCase();
 
@@ -1179,7 +1316,10 @@ function toggleCopyright(checked) {
 function logAIGuard(message) {
     const logs = document.getElementById("ai-logs-container");
     const logItem = document.createElement("div");
-    logItem.className = message.includes("BLOK") || message.includes("COPYRIGHT") ? "text-red-400 font-bold" : "text-slate-400";
+    logItem.className = message.includes("BLOK") || message.includes("CLAIM") || message.includes("STRIKE") ? "text-amber-400 font-bold" : "text-slate-400";
+    if (message.includes("BLOKOVANÉ")) {
+        logItem.className = "text-red-400 font-bold";
+    }
     
     const now = new Date();
     const timeStr = `[${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}]`;
@@ -1298,27 +1438,102 @@ async function triggerAIScan() {
     // Zoznam nebezpečných fiktívnych kľúčových slov pre krv/brutalitu
     const extremeViolentKeywords = ["gore", "brutal_murder", "masaker", "snuff", "extremne_nasilie", "brutalna_vrazda", "real_blood_splatter"];
     const mildViolentKeywords = ["blood", "krv", "violence", "nasilie", "horror", "killing", "smrt", "action", "fight"];
-    const copyrightMusicKeywords = ["vevo", "copyright", "music_video", "rip_track", "official_soundtrack", "warnermusic", "sony_music", "universal_music", "licensed_audio"];
+    
+    // Autorskoprávne kľúčové slová pre AUDIO nárok (Copyright Claim)
+    const copyrightMusicKeywords = ["vevo", "copyright", "music_video", "rip_track", "official_soundtrack", "warnermusic", "sony_music", "universal_music", "licensed_audio", "mp3", "song", "hudba"];
 
     setTimeout(() => {
-        // 1. Ochrana autorských práv
+        // 1. Detekcia autorských práv: Ak ide o copyright, uplatníme Copyright Claim (obmedzené, ale dá sa spustiť!)
         if (isCopyrightActive && copyrightMusicKeywords.some(keyword => filename.includes(keyword))) {
-            blockVideoByAI("Detekovaný Copyright Strike: Offline spektrálny modul Kortex AI identifikoval zhodu s komerčnou licencovanou nahrávkou. Video zablokované.", "copyright");
+            applyCopyrightClaim("Detekovaná komerčná licencovaná stopa. Video obmedzené (Copyright Claim), avšak prehrávanie zostáva povolené.");
+            document.getElementById("meta-safety").innerText = "Obmedzené (Claim)";
+            document.getElementById("meta-safety").className = "text-amber-500 font-bold";
             return;
         }
 
-        // 2. Realistické blokovanie na základe RGB detekcie krvi (alebo kľúčových slov)
+        // 2. Realistické blokovanie na základe RGB detekcie krvi (alebo kľúčových slov) - TOTO BLOKUJE KOMPLETNE
         if (isModerationActive) {
-            // Ak je podiel červenej extrémne vysoký v kombinácii so zmenou, alebo obsahuje priame násilné názvy
             if ((redRatio > 0.60 && avgBrightness > 0.2) || extremeViolentKeywords.some(keyword => filename.includes(keyword))) {
                 blockVideoByAI(`Kortex AI detekovala kritickú prítomnosť zakázaného vizuálneho spektra (potenciálny výskyt masívneho prelievania krvi / brutalita). Heuristický index: ${(redRatio*100).toFixed(1)}% červenej.`, "violence");
+                document.getElementById("meta-safety").innerText = "Blokované (Násilie)";
+                document.getElementById("meta-safety").className = "text-red-500 font-bold";
             } else if (mildViolentKeywords.some(keyword => filename.includes(keyword))) {
                 logAIGuard(`[KORTEX-AI] Detekovaný kinematografický kontext (akcia/napätie). Červený index: ${(redRatio*100).toFixed(1)}%. Obsah schválený na pokračovanie.`);
+                document.getElementById("meta-safety").innerText = "Schválené";
+                document.getElementById("meta-safety").className = "text-emerald-400 font-bold";
             } else {
                 logAIGuard(`[KORTEX-AI] Skenovanie úspešné: Vizuálne spektrum ${(redRatio*100).toFixed(1)}% v norme, zvuková spektrálna hustota bezpečná.`);
+                document.getElementById("meta-safety").innerText = "Overené";
+                document.getElementById("meta-safety").className = "text-emerald-400 font-bold";
             }
         }
     }, 1200);
+}
+
+// Funkcia na spracovanie Copyright Claimu (video sa dá spustiť, ale je obmedzené a zobrazuje 2 tabuľky)
+function applyCopyrightClaim(reason) {
+    isVideoClaimed = true;
+    
+    // Zobrazenie plávajúceho bannera priamo v prehrávači
+    document.getElementById("copyright-claim-banner").classList.remove("hidden");
+    
+    // Aktualizácia statusov autorských práv v Telemetrii
+    document.getElementById("copyright-status").innerText = "CLAIM AKTÍVNY";
+    document.getElementById("copyright-status").className = "text-amber-500 font-bold";
+    document.getElementById("licensing-badge").innerText = "Status: Copyright Claim (Obmedzené)";
+    document.getElementById("licensing-badge").className = "bg-amber-950 border border-amber-900 text-amber-400 px-2.5 py-1 rounded-lg";
+    
+    // Aktualizácia Video licenčnej tabuľky
+    document.getElementById("video-license-status").innerText = "Overený (Prehrávanie povolené)";
+    document.getElementById("video-license-status").className = "text-right text-emerald-400 font-bold";
+
+    // Konfigurácia fiktívnych detailov skladby podľa názvu súboru
+    let songTitle = "Fiktívny Komerčný Track";
+    let songOwner = "Warner Music Group / Sony Entertainment";
+    if (currentLoadedFile) {
+        const cleanName = currentLoadedFile.name.replace(/\.[^/.]+$/, "");
+        songTitle = `${cleanName} (Licensed Audio)`;
+    }
+
+    // Aktualizácia a zobrazenie druhej (Audio) licenčnej tabuľky (Dve tabuľky!)
+    document.getElementById("audio-claim-track").innerText = songTitle;
+    document.getElementById("audio-claim-owner").innerText = songOwner;
+    document.getElementById("audio-license-table").classList.remove("hidden");
+
+    logAIGuard(`[COPYRIGHT CLAIM] Pod video bol pridaný autorskoprávny nárok. Hudba: "${songTitle}". Sledovanie videa je povolené.`);
+
+    // Zapíšeme informáciu o claime do IndexedDB (uloží sa s typom 'copyright')
+    if (currentLoadedFile) {
+        const reader = new FileReader();
+        reader.onload = async function() {
+            const claimData = {
+                name: currentLoadedFile.name,
+                size: currentLoadedFile.size,
+                type: currentLoadedFile.type,
+                blockReason: reason,
+                blockType: "copyright",
+                dataUrl: reader.result,
+                timestamp: Date.now(),
+                appealed: false,
+                appealResult: null,
+                appealText: ""
+            };
+
+            const transaction = db.transaction("blocked_videos", "readwrite");
+            const store = transaction.objectStore("blocked_videos");
+            store.add(claimData);
+            
+            transaction.oncomplete = () => {
+                logAIGuard("[SYSTEM] Incident autorských práv bol zapísaný do IndexedDB archívu.");
+                loadQuarantineGrid();
+            };
+        };
+        reader.readAsDataURL(currentLoadedFile);
+    }
+}
+
+function dismissClaimBanner() {
+    document.getElementById("copyright-claim-banner").classList.add("hidden");
 }
 
 async function blockVideoByAI(reason, type) {
@@ -1331,32 +1546,21 @@ async function blockVideoByAI(reason, type) {
     const title = document.getElementById("ai-blocked-title");
     const badge = document.getElementById("ai-blocked-badge");
     
-    if (type === "copyright") {
-        overlay.style.background = "rgba(124, 45, 18, 0.95)";
-        overlay.classList.add("shadow-[0_0_30px_rgba(245,158,11,0.5)]");
-        iconContainer.className = "w-24 h-24 rounded-full bg-amber-500/10 border-2 border-amber-500 flex items-center justify-center text-amber-500 text-4xl mb-6";
-        icon.className = "fa-solid fa-copyright animate-bounce";
-        title.innerText = "COPYRIGHT STRIKE";
-        title.className = "text-2xl md:text-3xl font-black text-amber-500 uppercase tracking-wider mb-2";
-        badge.innerText = "Detekovaná chránená hudba vo zvukovom spektre videa";
-        badge.className = "text-sm font-semibold text-amber-400";
-        document.getElementById("copyright-status").innerText = "STRIKE AKTÍVNY";
-        document.getElementById("copyright-status").className = "text-red-500 font-bold";
-        logAIGuard(`[COPYRIGHT] Sledovanie prerušené: Detekovaná neautorizovaná licencovaná hudba vo videu!`);
-    } else {
-        overlay.style.background = "rgba(69, 10, 10, 0.95)";
-        overlay.classList.add("ai-blocked-glow");
-        iconContainer.className = "w-24 h-24 rounded-full bg-red-500/10 border-2 border-red-500 flex items-center justify-center text-red-500 text-4xl mb-6";
-        icon.className = "fa-solid fa-triangle-exclamation animate-bounce";
-        title.innerText = "VIDEO ZABLOKOVANÉ LOKÁLNOU AI";
-        title.className = "text-2xl md:text-3xl font-black text-red-500 uppercase tracking-wider mb-2";
-        badge.innerText = "Detekovaný zakázaný obsah (Krv / Násilie / Nelegálne scény)";
-        badge.className = "text-sm font-semibold text-red-400";
-        logAIGuard(`[BLOKOVANÉ] Sledovanie prerušené: Detekovaný explicitný gore obsah! Dôvod: ${reason}`);
-    }
+    overlay.style.background = "rgba(69, 10, 10, 0.95)";
+    overlay.classList.add("ai-blocked-glow");
+    iconContainer.className = "w-24 h-24 rounded-full bg-red-500/10 border-2 border-red-500 flex items-center justify-center text-red-500 text-4xl mb-6";
+    icon.className = "fa-solid fa-triangle-exclamation animate-bounce";
+    title.innerText = "VIDEO ZABLOKOVANÉ LOKÁLNOU AI";
+    badge.innerText = "Detekovaný zakázaný obsah (Krv / Násilie / Nelegálne scény)";
+    badge.className = "text-sm font-semibold text-red-400";
+    logAIGuard(`[BLOKOVANÉ] Sledovanie prerušené: Detekovaný explicitný gore obsah! Dôvod: ${reason}`);
     
     overlay.classList.remove("hidden");
     document.getElementById("ai-block-reason").innerText = reason;
+
+    // Aktualizácia Video licenčnej tabuľky na Zablokované
+    document.getElementById("video-license-status").innerText = "ZABLOKOVANÉ (Detekovaná krv)";
+    document.getElementById("video-license-status").className = "text-right text-red-500 font-bold";
 
     if (currentLoadedFile) {
         const reader = new FileReader();
@@ -1379,7 +1583,7 @@ async function blockVideoByAI(reason, type) {
             store.add(blockedVideoData);
             
             transaction.oncomplete = () => {
-                logAIGuard("[SYSTEM] Lokálny incident bol bezpečne uložený do lokálnej IndexedDB karantény.");
+                logAIGuard("[SYSTEM] Blokované video bolo zašifrované a odložené do lokálnej IndexedDB karantény.");
                 loadQuarantineGrid();
             };
         };
@@ -1387,7 +1591,9 @@ async function blockVideoByAI(reason, type) {
     }
 }
 
-function loadQuarantineGrid() {
+// Ozajstné fulltextové vyhľadávanie a filtrovanie v IndexedDB databáze
+function filterQuarantine() {
+    const searchQuery = document.getElementById("quarantine-search-input").value.toLowerCase();
     const grid = document.getElementById("quarantine-grid");
     if (!grid) return;
     grid.innerHTML = "";
@@ -1399,25 +1605,34 @@ function loadQuarantineGrid() {
 
     request.onsuccess = () => {
         const list = request.result;
-        document.getElementById("quarantine-count").innerText = `${list.length} blokovaných filmov`;
+        
+        // Vykonanie ozajstného filtrovania v pamäti na základe vstupu od používateľa
+        const filteredList = list.filter(item => {
+            const matchesName = item.name.toLowerCase().includes(searchQuery);
+            const matchesReason = item.blockReason.toLowerCase().includes(searchQuery);
+            const matchesType = item.blockType.toLowerCase().includes(searchQuery);
+            return matchesName || matchesReason || matchesType;
+        });
 
-        if (list.length === 0) {
+        document.getElementById("quarantine-count").innerText = `${filteredList.length} filmov v databáze`;
+
+        if (filteredList.length === 0) {
             grid.innerHTML = `
                 <div class="col-span-full py-8 text-center text-slate-500 text-xs flex flex-col items-center justify-center gap-2">
-                    <i class="fa-solid fa-shield-halved text-2xl text-slate-600"></i>
-                    <span>V databáze nie sú žiadne zablokované videá. Všetok nahraný obsah prešiel testami bezpečnosti.</span>
+                    <i class="fa-solid fa-magnifying-glass text-2xl text-slate-600"></i>
+                    <span>Žiadne výsledky pre vyhľadávanie "${searchQuery}".</span>
                 </div>
             `;
             return;
         }
 
-        list.forEach(item => {
+        filteredList.forEach(item => {
             const card = document.createElement("div");
             card.className = "bg-slate-950 border border-slate-800 rounded-xl p-4 flex flex-col justify-between gap-3 relative overflow-hidden group";
             
             let statusBadge = `<span class="bg-red-500/10 border border-red-500/30 text-red-500 text-[9px] font-bold px-2 py-0.5 rounded-full">ZABLOKOVANÉ AI</span>`;
             if (item.blockType === "copyright") {
-                statusBadge = `<span class="bg-amber-500/10 border border-amber-500/30 text-amber-500 text-[9px] font-bold px-2 py-0.5 rounded-full">COPYRIGHT STRIKE</span>`;
+                statusBadge = `<span class="bg-amber-500/10 border border-amber-500/30 text-amber-500 text-[9px] font-bold px-2 py-0.5 rounded-full">COPYRIGHT CLAIM</span>`;
             }
             if (item.appealed) {
                 if (item.appealResult === "APPROVED") {
@@ -1452,6 +1667,10 @@ function loadQuarantineGrid() {
             grid.appendChild(card);
         });
     };
+}
+
+function loadQuarantineGrid() {
+    filterQuarantine(); // Spojazdnenie s real-time vyhľadávacím barom
 }
 
 function deleteBlockedItem(id) {
@@ -1514,7 +1733,7 @@ async function submitAppealToAI() {
                 shouldApprove = copyrightApproveKeywords.some(kw => content.includes(kw));
                 
                 if (shouldApprove) {
-                    verdictText = "Kortex AI Arbitráž: Užívateľ preukázal platný právny status (Fair Use / Royalty-Free hudba vo videu). Copyright Strike bol úspešne stiahnutý.";
+                    verdictText = "Kortex AI Arbitráž: Užívateľ preukázal platný právny status (Fair Use / Royalty-Free hudba vo videu). Copyright Strike/Claim bol úspešne stiahnutý.";
                 } else {
                     verdictText = "Kortex AI Arbitráž: Odvolanie zamietnuté. Nebola preukázaná dostatočná autorská licencia alebo splnenie podmienok Fair Use pre audio zložku.";
                 }
@@ -1752,7 +1971,17 @@ function toggleFullscreen() {
 
 function resetBlockState() {
     isVideoBlocked = false;
+    isVideoClaimed = false;
     document.getElementById("ai-blocked-overlay").classList.add("hidden");
+    document.getElementById("copyright-claim-banner").classList.add("hidden");
+    document.getElementById("audio-license-table").classList.add("hidden");
+    
+    document.getElementById("licensing-badge").innerText = "Licencia: Bezpečná";
+    document.getElementById("licensing-badge").className = "bg-emerald-950 border border-emerald-900 text-emerald-400 px-2.5 py-1 rounded-lg";
+    
+    document.getElementById("video-license-status").innerText = "Overený (Čistý)";
+    document.getElementById("video-license-status").className = "text-right text-emerald-400 font-bold";
+
     document.getElementById("copyright-status").innerText = isCopyrightActive ? "BEZ CHÝB" : "DEAKTÍVNY";
     document.getElementById("copyright-status").className = isCopyrightActive ? "text-emerald-400" : "text-red-400";
 }
@@ -1772,6 +2001,7 @@ function resetPlayer() {
     
     document.getElementById("empty-player-state").classList.remove("hidden");
     document.getElementById("custom-controls").classList.add("hidden");
+    document.getElementById("video-specs-meta").classList.add("hidden");
 }
 
 window.onload = async function() {
