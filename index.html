@@ -212,12 +212,13 @@
                         <!-- Indikácia aktívneho kodeku -->
                         <span id="active-codec-badge" class="bg-slate-900 border border-slate-800 text-[10px] font-mono text-cyan-400 px-2 py-0.5 rounded uppercase">MP4</span>
                         
-                        <!-- Hlasitosť -->
-                        <div class="flex items-center gap-1.5 group/vol">
-                            <button onclick="toggleMute()" class="text-slate-400 hover:text-white transition-colors text-xs">
+                        <!-- Hlasitosť so zosilňovačom a kinosálou -->
+                        <div class="flex items-center gap-1.5 group/vol relative">
+                            <button onclick="toggleMute()" class="text-slate-400 hover:text-white transition-colors text-xs flex items-center gap-1">
                                 <i id="volume-icon" class="fa-solid fa-volume-high"></i>
+                                <span id="volume-overdrive-badge" class="text-[9px] font-bold text-cyan-400 hidden bg-cyan-950 border border-cyan-800 px-1 rounded">2x BOOST</span>
                             </button>
-                            <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="1" oninput="changeVolume(this.value)" class="w-12 h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-microsoft-blue">
+                            <input type="range" id="volume-slider" min="0" max="2" step="0.05" value="1" oninput="changeVolume(this.value)" class="w-16 h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-microsoft-blue" title="Nastavenie hlasitosti (0% - 200%)">
                         </div>
                         
                         <!-- Celá obrazovka -->
@@ -694,8 +695,14 @@ let isDecoderActive = false;
 let decoderInterval = null;
 let proceduralInterval = null;
 let isMusicMode = false; // Vždy deaktívne pre plnohodnotné video, no ponechané pre typovú kompatibilitu
+
+// Web Audio API uzly pre špičkový filmový zvukový systém
 let audioCtx = null;
 let analyser = null;
+let gainNode = null;           // Zosilňovač (Volume Overdrive)
+let bassFilter = null;         // Low-shelf filter pre dunivé filmové basy
+let spatialPanner = null;      // Priestorový kinosálový procesor (Virtual Surround)
+let dynamicCompressor = null;  // Stabilizátor špičiek a dialógov
 let sourceConnected = false;
 
 let isModerationActive = true;
@@ -817,7 +824,7 @@ async function startBiometricScanner() {
             ctx.strokeStyle = "#00a3a3";
             ctx.lineWidth = 3;
             ctx.beginPath(); ctx.moveTo(x, y + 15); ctx.lineTo(x, y); ctx.lineTo(x + 15, y); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(x + boxWidth, y + 15); ctx.lineTo(x + boxWidth, y); ctx.lineTo(x + boxWidth - 15, y); stroke();
+            ctx.beginPath(); ctx.moveTo(x + boxWidth, y + 15); ctx.lineTo(x + boxWidth, y); ctx.lineTo(x + boxWidth - 15, y); ctx.stroke();
             ctx.beginPath(); ctx.moveTo(x, y + boxHeight - 15); ctx.lineTo(x, y + boxHeight); ctx.lineTo(x + 15, y + boxHeight); ctx.stroke();
             ctx.beginPath(); ctx.moveTo(x + boxWidth, y + boxHeight - 15); ctx.lineTo(x + boxWidth, y + boxHeight); ctx.lineTo(x + boxWidth - 15, y + boxHeight); ctx.stroke();
 
@@ -880,17 +887,59 @@ function updateTelemetryIndicators() {
     emotionSpan.innerText = randomEmotion;
 }
 
+// Konfigurácia profesionálneho filmového audio procesora s vylepšeným kinosálovým audiom
 function setupAudioContext() {
     if (sourceConnected) return;
     try {
         const video = document.getElementById("main-video");
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // 1. Spektrálny analyzátor (vizuál)
         analyser = audioCtx.createAnalyser();
         analyser.fftSize = 256;
+        
+        // 2. low-shelf filter pre hlboké kinosálové basy (80Hz Bass Overdrive)
+        bassFilter = audioCtx.createBiquadFilter();
+        bassFilter.type = "lowshelf";
+        bassFilter.frequency.value = 80;
+        bassFilter.gain.value = 11; // Masívny nárast dunenia v nízkych frekvenciách
+        
+        // 3. Dynamic Range Compressor pre čistotu dialógov a zamedzenie chrapčania zvuku
+        dynamicCompressor = audioCtx.createDynamicsCompressor();
+        dynamicCompressor.threshold.value = -18;
+        dynamicCompressor.knee.value = 12;
+        dynamicCompressor.ratio.value = 8;
+        dynamicCompressor.attack.value = 0.003;
+        dynamicCompressor.release.value = 0.25;
+
+        // 4. Spatial Panner pre virtuálny kinosálový 3D obklopujúci priestorový zvuk
+        spatialPanner = audioCtx.createPanner();
+        spatialPanner.panningModel = 'HRTF';
+        spatialPanner.distanceModel = 'inverse';
+        spatialPanner.refDistance = 1;
+        spatialPanner.maxDistance = 10000;
+        spatialPanner.rolloffFactor = 1;
+        spatialPanner.coneInnerAngle = 360;
+        spatialPanner.coneOuterAngle = 0;
+        spatialPanner.coneOuterGain = 0;
+        // Umiestnenie virtuálneho poslucháča v strede kinosály
+        spatialPanner.setPosition(0, 0, 0.5);
+
+        // 5. Hlavný zosilňovač pre prekročenie limitov hlasitosti (Overdrive až do 200%)
+        gainNode = audioCtx.createGain();
+        gainNode.gain.value = 1.0; // Predvolene normálna úroveň (zodpovedá slideru 1.0)
+
+        // Prepojenie audio reťazca: Video -> Bass filter -> Compressor -> 3D Panner -> GainNode -> Reproduktory
         const source = audioCtx.createMediaElementSource(video);
-        source.connect(analyser);
+        source.connect(bassFilter);
+        bassFilter.connect(dynamicCompressor);
+        dynamicCompressor.connect(spatialPanner);
+        spatialPanner.connect(gainNode);
+        gainNode.connect(analyser);
         analyser.connect(audioCtx.destination);
+        
         sourceConnected = true;
+        logAIGuard("[AUDIO] Profesionálny kinosálový procesor s priestorovým zvukom, dynamickým kompresorom a Bass-Boostom bol úspešne prepojený.");
     } catch (e) {
         console.warn("AudioContext init failed:", e);
     }
@@ -1330,7 +1379,7 @@ async function blockVideoByAI(reason, type) {
             store.add(blockedVideoData);
             
             transaction.oncomplete = () => {
-                logAIGuard("[SYSTEM] Blokované video bolo zašifrované a odložené do lokálnej IndexedDB karantény pre konanie o odvolaní.");
+                logAIGuard("[SYSTEM] Lokálny incident bol bezpečne uložený do lokálnej IndexedDB karantény.");
                 loadQuarantineGrid();
             };
         };
@@ -1631,9 +1680,32 @@ function pauseVideo() {
     }
 }
 
+// Zosilnenie zvuku v reálnom čase (Volume Overdrive až do 200%)
 function changeVolume(val) {
     const video = document.getElementById("main-video");
-    video.volume = val;
+    const numericVal = parseFloat(val);
+    
+    // Klasické natívne ovládanie elementu pre rozsah 0% - 100%
+    if (numericVal <= 1.0) {
+        video.volume = numericVal;
+    } else {
+        video.volume = 1.0; // Natívny limit
+    }
+    
+    // Web Audio API gain pre zosilnenie (Overdrive 100% - 200%)
+    setupAudioContext();
+    if (gainNode) {
+        gainNode.gain.value = numericVal;
+    }
+
+    // Zobrazenie indikátora zosilnenia (Boost)
+    const overdriveBadge = document.getElementById("volume-overdrive-badge");
+    if (numericVal > 1.05) {
+        overdriveBadge.innerText = `${Math.round(numericVal * 100)}% BOOST`;
+        overdriveBadge.classList.remove("hidden");
+    } else {
+        overdriveBadge.classList.add("hidden");
+    }
 }
 
 function toggleMute() {
