@@ -11,7 +11,7 @@
     <!-- FontAwesome pre prémiové ikony -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts - Inter pre modernú čitateľnosť -->
-    <link href="https://fonts.googleapis.com/css2%family=Inter:wght=300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <script>
         tailwind.config = {
@@ -492,7 +492,7 @@
                 <div class="text-slate-500">[SYSTEM] Miestny heuristický model pripravený na analýzu video-snímok.</div>
             </div>
 
-            <!-- Rýchle nastavenie ochrany -->
+            <!-- Rýchle nastavenion ochrany -->
             <div class="mt-4 pt-4 border-t border-slate-800 flex flex-col gap-3">
                 <div class="flex items-center justify-between">
                     <div class="flex flex-col gap-0.5">
@@ -1095,7 +1095,7 @@ function handleFileSelect(event) {
     
     // Reset predchádzajúcich stavov ochrany
     resetBlockState();
-    isMusicMode = false; // Každý formát, aj audio prípony, prehrávame ako video stream
+    isMusicMode = false; // Vždy deaktívne pre plnohodnotné video, no ponechané pre typovú kompatibilitu
 
     const video = document.getElementById("main-video");
 
@@ -1439,8 +1439,8 @@ async function triggerAIScan() {
     const extremeViolentKeywords = ["gore", "brutal_murder", "masaker", "snuff", "extremne_nasilie", "brutalna_vrazda", "real_blood_splatter"];
     const mildViolentKeywords = ["blood", "krv", "violence", "nasilie", "horror", "killing", "smrt", "action", "fight"];
     
-    // Autorskoprávne kľúčové slová pre AUDIO nárok (Copyright Claim)
-    const copyrightMusicKeywords = ["vevo", "copyright", "music_video", "rip_track", "official_soundtrack", "warnermusic", "sony_music", "universal_music", "licensed_audio", "mp3", "song", "hudba"];
+    // Autorskoprávne kľúčové slová pre AUDIO nárok (Copyright Claim) - vrátane GrooveVortex!
+    const copyrightMusicKeywords = ["vevo", "copyright", "music_video", "rip_track", "official_soundtrack", "warnermusic", "sony_music", "universal_music", "licensed_audio", "mp3", "song", "hudba", "groovevortex"];
 
     setTimeout(() => {
         // 1. Detekcia autorských práv: Ak ide o copyright, uplatníme Copyright Claim (obmedzené, ale dá sa spustiť!)
@@ -1487,12 +1487,17 @@ function applyCopyrightClaim(reason) {
     document.getElementById("video-license-status").innerText = "Overený (Prehrávanie povolené)";
     document.getElementById("video-license-status").className = "text-right text-emerald-400 font-bold";
 
-    // Konfigurácia fiktívnych detailov skladby podľa názvu súboru
+    // Konfigurácia fiktívnych detailov skladby podľa názvu súboru (s prepojením na GrooveVortex)
     let songTitle = "Fiktívny Komerčný Track";
     let songOwner = "Warner Music Group / Sony Entertainment";
     if (currentLoadedFile) {
         const cleanName = currentLoadedFile.name.replace(/\.[^/.]+$/, "");
-        songTitle = `${cleanName} (Licensed Audio)`;
+        if (cleanName.toLowerCase().includes("groovevortex")) {
+            songTitle = "GrooveVortex - Original Cinematic Mix";
+            songOwner = "GrooveVortex Recordings Ltd.";
+        } else {
+            songTitle = `${cleanName} (Licensed Audio)`;
+        }
     }
 
     // Aktualizácia a zobrazenie druhej (Audio) licenčnej tabuľky (Dve tabuľky!)
