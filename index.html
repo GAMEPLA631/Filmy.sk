@@ -838,6 +838,10 @@ let isVideoBlocked = false;
 let isVideoClaimed = false; // Nový stav: obmedzené prehrávanie bez blokovania
 let currentAppealId = null;
 
+// Zámky na zamedzenie duplicitných zápisov a skenovania
+let lastScannedSecond = -1;
+let isScanningInProgress = false;
+
 // Predchádzajúce pixelové dáta pre detekciu pohybu
 let prevImgData = null;
 
@@ -1285,15 +1289,17 @@ function runDecoderSimulation() {
         ctx.fillText(`KORTEX DECODED MKV STREAM // FRAME ${Math.floor(customVideoCurrentTime * 24)}`, 35, 125);
         ctx.fillText("VIDEO OUTPUT: RESOLVED PERFECTLY (1080p)", 35, 145);
 
-        // Posun reálneho času filmu
+        // Posun reálneho času filmu s fixáciou duplicitných skenov
         customVideoCurrentTime += 0.1;
         if (customVideoCurrentTime >= customVideoDuration) {
             customVideoCurrentTime = 0;
         }
         updateProgressBar();
         
-        // Skenovanie obsahu na pozadí (každých 8 sekúnd prebieha diskrétny bezpečnostný test)
-        if (Math.floor(customVideoCurrentTime) % 8 === 0 && Math.floor(customVideoCurrentTime) > 0) {
+        // Skenovanie obsahu na pozadí (diskrétny test len raz za sekundu v 8-sekundovom markere)
+        const currentSec = Math.floor(customVideoCurrentTime);
+        if (currentSec % 8 === 0 && currentSec > 0 && currentSec !== lastScannedSecond) {
+            lastScannedSecond = currentSec;
             triggerAIScan();
         }
     }, 100);
@@ -1331,8 +1337,10 @@ function logAIGuard(message) {
 
 // Úplne nový lokálny AI skener, ktorý analyzuje farebnosť a vlastnosti reálneho videa bez nutnosti API kľúča
 async function triggerAIScan() {
-    if ((!isModerationActive && !isCopyrightActive) || isVideoBlocked) return;
+    // Ak už prebieha jeden aktívny sken, alebo je video už obmedzené/zablokované, okamžite preruš
+    if ((!isModerationActive && !isCopyrightActive) || isVideoBlocked || isVideoClaimed || isScanningInProgress) return;
     
+    isScanningInProgress = true;
     logAIGuard("[KORTEX-AI] Spúšťam lokálnu neurónovú analýzu video snímok a spektrálneho zvuku...");
 
     // Vytvorenie dočasného canvasu pre skutočnú analýzu RGB spektra (hľadanie dominantnej červenej = krvi)
@@ -1443,6 +1451,11 @@ async function triggerAIScan() {
     const copyrightMusicKeywords = ["vevo", "copyright", "music_video", "rip_track", "official_soundtrack", "warnermusic", "sony_music", "universal_music", "licensed_audio", "mp3", "song", "hudba", "groovevortex"];
 
     setTimeout(() => {
+        isScanningInProgress = false; // Uvoľniť skenovací zámok
+        
+        // Ak sa v čase analýzy video zablokovalo alebo obmedzilo, už nepokračuj v uplatňovaní nového claimu
+        if (isVideoBlocked || isVideoClaimed) return;
+
         // 1. Detekcia autorských práv: Ak ide o copyright, uplatníme Copyright Claim (obmedzené, ale dá sa spustiť!)
         if (isCopyrightActive && copyrightMusicKeywords.some(keyword => filename.includes(keyword))) {
             applyCopyrightClaim("Detekovaná komerčná licencovaná stopa. Video obmedzené (Copyright Claim), avšak prehrávanie zostáva povolené.");
@@ -1470,8 +1483,9 @@ async function triggerAIScan() {
     }, 1200);
 }
 
-// Funkcia na spracovanie Copyright Claimu (video sa dá spustiť, ale je obmedzené a zobrazuje 2 tabuľky)
+// Funkcia na spracovanie Copyright Claimu (video sa dá spustiť, ale je obmedzené a zobrazuje 2 tabuľky bez 58 duplikátov!)
 function applyCopyrightClaim(reason) {
+    if (isVideoBlocked || isVideoClaimed) return; // Strict guard pre zabránenie duplicitným volaniam
     isVideoClaimed = true;
     
     // Zobrazenie plávajúceho bannera priamo v prehrávači
@@ -1507,7 +1521,7 @@ function applyCopyrightClaim(reason) {
 
     logAIGuard(`[COPYRIGHT CLAIM] Pod video bol pridaný autorskoprávny nárok. Hudba: "${songTitle}". Sledovanie videa je povolené.`);
 
-    // Zapíšeme informáciu o claime do IndexedDB (uloží sa s typom 'copyright')
+    // Zapíšeme informáciu o claime do IndexedDB (uloží sa s typom 'copyright' - iba JEDINÝ zápis)
     if (currentLoadedFile) {
         const reader = new FileReader();
         reader.onload = async function() {
@@ -1542,6 +1556,7 @@ function dismissClaimBanner() {
 }
 
 async function blockVideoByAI(reason, type) {
+    if (isVideoBlocked) return; // Strict guard pre zabránenie duplicitným volaniam
     isVideoBlocked = true;
     pauseVideo();
     
@@ -1977,6 +1992,9 @@ function toggleFullscreen() {
 function resetBlockState() {
     isVideoBlocked = false;
     isVideoClaimed = false;
+    lastScannedSecond = -1;
+    isScanningInProgress = false;
+    
     document.getElementById("ai-blocked-overlay").classList.add("hidden");
     document.getElementById("copyright-claim-banner").classList.add("hidden");
     document.getElementById("audio-license-table").classList.add("hidden");
@@ -2029,7 +2047,10 @@ window.onload = async function() {
             customVideoCurrentTime = video.currentTime;
             updateProgressBar();
             
-            if (Math.floor(video.currentTime) % 8 === 0 && Math.floor(video.currentTime) > 0) {
+            // Kontrola sekundy: filter spúšťame maximálne raz za sekundu (iba v 8. sekunde)
+            const currentSec = Math.floor(video.currentTime);
+            if (currentSec % 8 === 0 && currentSec > 0 && currentSec !== lastScannedSecond) {
+                lastScannedSecond = currentSec;
                 triggerAIScan();
             }
         }
