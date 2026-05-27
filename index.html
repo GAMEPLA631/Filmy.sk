@@ -562,6 +562,75 @@
     <p>© 2026 Kortex Premium Media Platform. Všetky práva vyhradené. Používa lokálnu offline neurónovú sieť Kortex Core AI pre pokročilú bezpečnosť bez potreby externých API kľúčov.</p>
 </footer>
 
+<!-- NOVÝ MODAL: 24h Pravidelné Bezpečnostné Overenie -->
+<div id="security-verification-modal" class="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-xl flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border-2 border-microsoft-blue rounded-3xl w-full max-w-lg p-6 md:p-8 shadow-2xl relative flex flex-col gap-5">
+        
+        <div class="text-center">
+            <div class="inline-flex items-center justify-center w-14 h-14 mb-3 rounded-2xl bg-microsoft-blue/10 border border-microsoft-blue/30 text-microsoft-blue text-2xl">
+                <i class="fa-solid fa-shield-halved animate-pulse"></i>
+            </div>
+            <h2 class="text-xl md:text-2xl font-black text-white tracking-tight">Periodické Bezpečnostné Overenie</h2>
+            <p class="text-xs text-slate-400 mt-1">Podľa bezpečnostného protokolu platformy sa vyžaduje re-autorizácia klienta raz za 24 hodín.</p>
+        </div>
+
+        <!-- Warning box pre chyby pri vypĺňaní -->
+        <div id="sec-error-box" class="bg-red-950/80 border border-red-500/30 rounded-xl p-3 text-[11px] text-red-400 leading-normal hidden">
+            <i class="fa-solid fa-triangle-exclamation mr-1"></i> <span id="sec-error-msg">Vyplňte správne všetky vyžadované polia.</span>
+        </div>
+
+        <!-- Formulár s 4 povinnými krokmi -->
+        <div class="flex flex-col gap-4">
+            <!-- 1. Meno / Kód operátora -->
+            <div>
+                <label class="block text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">1. Meno používateľa / ID diváka</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500 text-xs">
+                        <i class="fa-solid fa-user"></i>
+                    </span>
+                    <input type="text" id="sec-username" placeholder="Meno diváka (napr. Ján)" class="w-full bg-slate-950 border border-slate-800 hover:border-slate-700 focus:border-microsoft-blue focus:outline-none rounded-xl py-2 pl-9 pr-3 text-xs text-white">
+                </div>
+            </div>
+
+            <!-- 2. Prístupový PIN kód -->
+            <div>
+                <label class="block text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">2. Prístupový PIN kód (4 číslice)</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500 text-xs">
+                        <i class="fa-solid fa-key"></i>
+                    </span>
+                    <input type="password" id="sec-pin" maxlength="4" placeholder="••••" class="w-full bg-slate-950 border border-slate-800 hover:border-slate-700 focus:border-microsoft-blue focus:outline-none rounded-xl py-2 pl-9 pr-3 text-xs text-white font-mono tracking-widest">
+                </div>
+            </div>
+
+            <!-- 3. Veková reštrikcia -->
+            <div>
+                <label class="block text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">3. Vyhlásenie o vekovej autorizácii</label>
+                <select id="sec-age" class="w-full bg-slate-950 border border-slate-800 focus:border-microsoft-blue focus:outline-none rounded-xl p-2.5 text-xs text-white">
+                    <option value="none">--- Vyberte vekovú kategóriu ---</option>
+                    <option value="under18">Mám menej ako 18 rokov (Obmedzený prístup)</option>
+                    <option value="over18">Potvrdzujem, že mám 18 alebo viac rokov (Plný prístup)</option>
+                </select>
+            </div>
+
+            <!-- 4. Matematický Captcha kód -->
+            <div>
+                <label class="block text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">4. AI Captcha Bezpečnostný kľúč</label>
+                <div class="grid grid-cols-3 gap-3 items-center">
+                    <div class="col-span-1 bg-slate-950 border border-slate-850 rounded-xl py-2 text-center font-mono font-bold text-microsoft-teal text-sm select-none" id="sec-captcha-question">
+                        5 + 3 =
+                    </div>
+                    <input type="number" id="sec-captcha-input" placeholder="Výsledok" class="col-span-2 w-full bg-slate-950 border border-slate-800 hover:border-slate-700 focus:border-microsoft-blue focus:outline-none rounded-xl py-2 px-3 text-xs text-white font-mono">
+                </div>
+            </div>
+        </div>
+
+        <button onclick="submitSecurityVerification()" class="w-full bg-gradient-to-r from-microsoft-blue to-microsoft-teal text-white font-bold text-xs py-3.5 rounded-xl shadow-lg shadow-cyan-500/10 hover:shadow-cyan-500/20 transition-all flex items-center justify-center gap-2">
+            <i class="fa-solid fa-shield-check"></i> Dokončiť Autorizáciu a Odomknúť
+        </button>
+    </div>
+</div>
+
 <!-- MODAL: Microsoft Premium Plány & Platobná Brána -->
 <div id="premium-modal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 hidden">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 md:p-8 flex flex-col gap-8 relative">
@@ -764,9 +833,17 @@
                 <span class="text-slate-500">FAREBNÝ SCAN (RGB ANALYSIS):</span>
                 <span class="text-cyan-400 font-bold">AKTÍVNY</span>
             </div>
-            <div class="flex justify-between pb-1">
-                <span class="text-slate-500">AUDIO-FREQ MODULÁCIA:</span>
-                <span class="text-amber-400 font-bold">ZABEZPEČENÁ</span>
+            <div class="flex justify-between pb-1 flex-col gap-1 border-b border-slate-900">
+                <div class="flex justify-between">
+                    <span class="text-slate-500">AUDIO-FREQ MODULÁCIA:</span>
+                    <span class="text-amber-400 font-bold">ZABEZPEČENÁ</span>
+                </div>
+            </div>
+            <!-- Možnosť testovania 24h overenia pre užívateľa -->
+            <div class="pt-1">
+                <button onclick="simulateVerificationExpiry()" class="w-full bg-slate-900 hover:bg-slate-850 text-slate-300 border border-slate-800 text-[9px] py-1.5 rounded-lg transition-colors font-bold flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-clock-rotate-left text-microsoft-teal"></i> Simulovať vypršanie 24h overenia
+                </button>
             </div>
         </div>
 
@@ -787,7 +864,7 @@
             <i class="fa-solid fa-gavel"></i> Odvolacie konanie u Kortex AI
         </h3>
         <p class="text-xs text-slate-400">
-            Bolo vaše video neprávom zablokované alebo obmedzené Copyright Claimom? Popíšte dôvod, prečo by mala lokálna AI prehodnotiť označenie krvi, násilia alebo zvuku. AI vykoná novú kognitívnu analýzu.
+            Bolo vaše video neprávom zablokované alebo obmedzené Copyright Claimom? Popíšte dôvod, prečo by mala lokálna AI prehodnotiť označenie krvi, násilia alebo zvuku. AI vykona novú kognitívnu analýzu.
         </p>
 
         <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-[11px]">
@@ -841,6 +918,9 @@ let currentAppealId = null;
 // Zámky na zamedzenie duplicitných zápisov a skenovania
 let lastScannedSecond = -1;
 let isScanningInProgress = false;
+
+// Premenná na uloženie správnej odpovede lokálnej AI Captchy
+let currentCaptchaResult = null;
 
 // Predchádzajúce pixelové dáta pre detekciu pohybu
 let prevImgData = null;
@@ -909,6 +989,101 @@ async function getDBSetting(key) {
         request.onsuccess = () => resolve(request.result ? request.result.value : null);
         request.onerror = () => resolve(null);
     });
+}
+
+// Funkcia na generovanie náhodnej lokálnej AI matematickej captchy
+function generateSecurityCaptcha() {
+    const num1 = Math.floor(Math.random() * 10) + 1;
+    const num2 = Math.floor(Math.random() * 9) + 1;
+    currentCaptchaResult = num1 + num2;
+    document.getElementById("sec-captcha-question").innerText = `${num1} + ${num2} =`;
+}
+
+// Overenie stavu 24-hodinového bezpečnostného overenia diváka
+async function checkSecurityVerification() {
+    if (!db) return;
+    const lastVerification = await getDBSetting("last_security_verification");
+    const now = Date.now();
+    
+    // Ak prešlo viac ako 24 hodín (86400000 ms) alebo ešte nebolo vykonané, zablokuj systém a vyžiadaj overenie
+    if (!lastVerification || (now - lastVerification > 24 * 60 * 60 * 1000)) {
+        pauseVideo();
+        generateSecurityCaptcha();
+        document.getElementById("security-verification-modal").classList.remove("hidden");
+        logAIGuard("[SYSTEM] Vyžaduje sa pravidelné 24-hodinové bezpečnostné overenie diváka.");
+    } else {
+        const timeRemaining = (24 * 60 * 60 * 1000) - (now - lastVerification);
+        const hoursRemaining = (timeRemaining / (1000 * 60 * 60)).toFixed(1);
+        logAIGuard(`[SYSTEM] Bezpečnostné overenie platné. Re-autorizácia vyžadovaná o: ${hoursRemaining} hod.`);
+    }
+}
+
+// Odoslanie a overenie 4 povinných prvkov
+async function submitSecurityVerification() {
+    const errorBox = document.getElementById("sec-error-box");
+    const errorMsg = document.getElementById("sec-error-msg");
+    errorBox.classList.add("hidden");
+
+    // 1. Meno / ID diváka
+    const username = document.getElementById("sec-username").value.trim();
+    if (!username) {
+        showSecError("Položka 1 (Meno diváka) musí byť vyplnená.");
+        return;
+    }
+
+    // 2. PIN kód prístupu (musí byť presne 4 číslice)
+    const pin = document.getElementById("sec-pin").value.trim();
+    if (!pin || pin.length !== 4 || isNaN(pin)) {
+        showSecError("Položka 2 (PIN kód) musí obsahovať presne 4 číslice.");
+        return;
+    }
+
+    // 3. Vyhlásenie o vekovej kategórii
+    const ageSelect = document.getElementById("sec-age").value;
+    if (ageSelect === "none") {
+        showSecError("Položka 3 (Veková kategória) musí byť zvolená.");
+        return;
+    }
+    if (ageSelect === "under18") {
+        showSecError("Platforma Kortex Cinema Premium vyžaduje vek nad 18 rokov. Vstup zamedzený.");
+        return;
+    }
+
+    // 4. AI Captcha Bezpečnostný kľúč
+    const captchaInput = parseInt(document.getElementById("sec-captcha-input").value.trim(), 10);
+    if (isNaN(captchaInput) || captchaInput !== currentCaptchaResult) {
+        showSecError("Položka 4 (AI Captcha Bezpečnostný kľúč) nie je správna. Prepočítajte príklad.");
+        generateSecurityCaptcha();
+        return;
+    }
+
+    // Všetky 4 veci boli úspešne vyplnené
+    await setDBSetting("last_security_verification", Date.now());
+    await setDBSetting("verified_user_name", username);
+    
+    // Skryjeme overovací blok, zapíšeme úspech a uvoľníme prehrávač
+    document.getElementById("security-verification-modal").classList.add("hidden");
+    logAIGuard(`[SECURITY] 24h overenie úspešne potvrdené pre operátora: ${username}. Prístup odomknutý na ďalších 24h.`);
+    
+    // Vyčistenie polí
+    document.getElementById("sec-username").value = "";
+    document.getElementById("sec-pin").value = "";
+    document.getElementById("sec-age").value = "none";
+    document.getElementById("sec-captcha-input").value = "";
+}
+
+function showSecError(text) {
+    const errorBox = document.getElementById("sec-error-box");
+    const errorMsg = document.getElementById("sec-error-msg");
+    errorMsg.innerText = text;
+    errorBox.classList.remove("hidden");
+}
+
+// Simulácia vypršania platnosti pre používateľa (Možnosť kedykoľvek otestovať!)
+async function simulateVerificationExpiry() {
+    await setDBSetting("last_security_verification", 0); // Vynulovanie času v IndexedDB
+    closeAiMonitorModal();
+    checkSecurityVerification();
 }
 
 async function startBiometricScanner() {
@@ -1603,7 +1778,7 @@ async function blockVideoByAI(reason, type) {
             store.add(blockedVideoData);
             
             transaction.oncomplete = () => {
-                logAIGuard("[SYSTEM] Blokované video bolo zašifrované a odložené do lokálnej IndexedDB karantény.");
+                logAIGuard("[SYSTEM] Video s detekovaným násilím/krvou bolo presunuté do lokálnej IndexedDB karantény.");
                 loadQuarantineGrid();
             };
         };
@@ -2040,6 +2215,9 @@ window.onload = async function() {
 
     startBiometricScanner();
     loadQuarantineGrid();
+
+    // Spustenie periodickej bezpečnostnej kontroly 24h overenia
+    checkSecurityVerification();
 
     const video = document.getElementById("main-video");
     video.addEventListener('timeupdate', () => {
