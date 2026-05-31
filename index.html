@@ -160,7 +160,7 @@
                     <div class="w-20 h-20 rounded-2xl bg-microsoft-blue/10 border border-microsoft-blue/30 flex items-center justify-center mb-6 animate-pulse">
                         <i class="fa-solid fa-microchip text-4xl text-microsoft-blue"></i>
                     </div>
-                    <h3 class="text-xl font-bold tracking-tight mb-2">Univerzálny Premium Kodek Aktívny</h3>
+                    h3 class="text-xl font-bold tracking-tight mb-2">Univerzálny Premium Kodek Aktívny</h3>
                     <p class="text-xs text-slate-400 mb-6 leading-relaxed">
                         Zistili sme starší alebo natívne nepodporovaný formát prehliadača (<span id="unsupported-ext" class="text-cyan-400 font-bold">MKV</span>). Spúšťame lokálnu emuláciu renderera, aby sme obišli reštrikcie prehliadača.
                     </p>
@@ -971,6 +971,45 @@
     </div>
 </div>
 
+<!-- MODAL: Kortex Music License Details (Vyvolaný tromi bodkami) -->
+<div id="music-details-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden" onclick="closeMusicDetailsModal()">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 relative flex flex-col gap-4" onclick="event.stopPropagation()">
+        <button onclick="closeMusicDetailsModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors">
+            <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+
+        <h3 class="text-lg font-bold text-white flex items-center gap-2 text-amber-500">
+            <i class="fa-solid fa-circle-info"></i> Detaily autorských práv
+        </h3>
+        <p class="text-xs text-slate-400">
+            Podrobnosti o identifikovanej zvukovej stope, ktorá vyvolala obmedzenie prenosu.
+        </p>
+
+        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col gap-2.5 font-mono text-[11px]">
+            <div class="flex justify-between border-b border-slate-900 pb-2">
+                <span class="text-slate-500">NÁZOV SKLADBY:</span>
+                <span class="text-white font-bold text-right ml-2" id="detail-song-name">118 I Couldn't Sing</span>
+            </div>
+            <div class="flex justify-between border-b border-slate-900 pb-2">
+                <span class="text-slate-500">INTERPRET:</span>
+                <span class="text-slate-300 text-right ml-2" id="detail-artist-name">Jake Chudnow</span>
+            </div>
+            <div class="flex justify-between border-b border-slate-900 pb-2">
+                <span class="text-slate-500">ALBUM:</span>
+                <span class="text-slate-400 text-right ml-2" id="detail-album-name">I Hope My Wife Likes Cheesecake</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-slate-500">STAV OCHRANY:</span>
+                <span class="text-amber-400 font-bold text-right ml-2">Copyright Claim (Spustiteľné)</span>
+            </div>
+        </div>
+
+        <button onclick="closeMusicDetailsModal()" class="w-full bg-slate-950 hover:bg-slate-850 text-slate-300 font-semibold text-xs py-3 rounded-xl border border-slate-800 transition-colors">
+            Zatvoriť detaily
+        </button>
+    </div>
+</div>
+
 <script>
 const DB_NAME = "PremiumPlayerDB";
 const DB_VERSION = 1;
@@ -979,6 +1018,7 @@ let db = null;
 let webcamStream = null;
 let biometricInterval = null;
 
+// Súbory z počítača sa neukladajú, s výnimkou detekcie Claim/Bloku
 let currentLoadedFile = null;
 let customVideoDuration = 0;
 let customVideoCurrentTime = 0;
@@ -1421,7 +1461,7 @@ function handleFileSelect(event) {
     const video = document.getElementById("main-video");
 
     // Aktualizácia textu v Popise Videa
-    document.getElementById("playing-desc").innerText = `Práve sledujete video súbor "${file.name}". Skenovací mechanizmus Kortex AI skontroluje licenciu tohto diela. Ak video obsahuje chránenú audio stopu, bude označené Copyright Claimom (stále zostane spustiteľné s obmedzením). Ak zistí reálne násilie a preliatu krv, bude okamžite prenesené do IndexedDB karantény.`;
+    document.getElementById("playing-desc").innerText = `Práve sledujete video súbor "${file.name}". Skenovací mechanizmus Kortex AI skontroluje licenciu tohto diela. Ak video obsahuje chránenú audio stopu, bude označené Copyright Claimom (stále zostane spustiteľné s obmedzením). Ak zistí reálne násilie i preliatu krv, bude okamžite prenesené do IndexedDB karantény.`;
     
     // Zobrazenie Kognitívnych Metadát
     document.getElementById("meta-director").innerText = "Kortex Local Director";
@@ -1829,21 +1869,22 @@ function applyCopyrightClaim(reason) {
 
     if (currentLoadedFile) {
         const cleanNameLower = currentLoadedFile.name.toLowerCase();
-        if (cleanNameLower.includes("groovevortex")) {
-            songTitle = "GrooveVortex - Original Cinematic Mix";
-            songArtist = "GrooveVortex Recordings Ltd.";
-            songAlbum = "Vortex Cinematic Sounds";
-        } else if (cleanNameLower.includes("coldplay")) {
-            // Inteligentná sémantická detekcia pre skupinu Coldplay
-            const meta = parseAudioMetadata(currentLoadedFile.name);
-            songTitle = meta.title;
-            songArtist = "Coldplay";
-            songAlbum = meta.album !== "Rôzni umelci - Single" && !meta.album.includes("Rôzni") ? meta.album : "A Head Full of Dreams";
-        } else {
-            const meta = parseAudioMetadata(currentLoadedFile.name);
-            songTitle = meta.title;
-            songArtist = meta.artist;
-            songAlbum = meta.album;
+        
+        // Sémantické rozlíšenie cez parseAudioMetadata
+        const meta = parseAudioMetadata(currentLoadedFile.name);
+        songTitle = meta.title;
+        songArtist = meta.artist;
+        songAlbum = meta.album;
+        
+        // Ak heuristika vrátila generický tag "Rôzni umelci", skúsime overiť kľúčové slová pre lepšiu interpretáciu
+        if (songArtist === "Rôzni umelci" || songArtist === "Rozni Umelci") {
+            if (cleanNameLower.includes("groovevortex")) {
+                songArtist = "GrooveVortex";
+                songAlbum = "Vortex Cinematic Sounds";
+            } else if (cleanNameLower.includes("coldplay")) {
+                songArtist = "Coldplay";
+                songAlbum = "A Head Full of Dreams";
+            }
         }
     }
 
@@ -2127,7 +2168,7 @@ function filterQuarantine() {
                     </div>
                 </div>
                 <div class="flex gap-2 mt-2">
-                    <button onclick="requestAppealForItem(${item.id})" class="flex-1 bg-slate-900 hover:bg-slate-800 text-slate-300 font-semibold text-[10px] py-1.5 rounded border border-slate-800 transition-colors">
+                    <button onclick="requestAppealForItem(${item.id})" class="flex-1 bg-slate-900 hover:bg-slate-850 text-slate-300 font-semibold text-[10px] py-1.5 rounded border border-slate-800 transition-colors">
                         Odvolať sa
                     </button>
                     <button onclick="deleteBlockedItem(${item.id})" class="text-red-400 hover:text-red-300 p-1.5 bg-red-950/20 border border-red-950 rounded transition-colors text-[10px]">
