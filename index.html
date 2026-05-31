@@ -1764,8 +1764,8 @@ async function triggerAIScan() {
     const extremeViolentKeywords = ["gore", "brutal_murder", "masaker", "snuff", "extremne_nasilie", "brutalna_vrazda", "real_blood_splatter"];
     const mildViolentKeywords = ["blood", "krv", "violence", "nasilie", "horror", "killing", "smrt", "action", "fight"];
     
-    // Autorskoprávne kľúčové slová pre AUDIO nárok (Copyright Claim) - vrátane GrooveVortex!
-    const copyrightMusicKeywords = ["vevo", "copyright", "music_video", "rip_track", "official_soundtrack", "warnermusic", "sony_music", "universal_music", "licensed_audio", "mp3", "song", "hudba", "groovevortex"];
+    // Autorskoprávne kľúčové slová pre AUDIO nárok (Copyright Claim) - vrátane GrooveVortex a novo Coldplay!
+    const copyrightMusicKeywords = ["vevo", "copyright", "music_video", "rip_track", "official_soundtrack", "warnermusic", "sony_music", "universal_music", "licensed_audio", "mp3", "song", "hudba", "groovevortex", "coldplay"];
 
     setTimeout(() => {
         isScanningInProgress = false; // Uvoľniť skenovací zámok
@@ -1828,10 +1828,23 @@ function applyCopyrightClaim(reason) {
     let songAlbum = "I Hope My Wife Likes Cheesecake";
 
     if (currentLoadedFile) {
-        const meta = parseAudioMetadata(currentLoadedFile.name);
-        songTitle = meta.title;
-        songArtist = meta.artist;
-        songAlbum = meta.album;
+        const cleanNameLower = currentLoadedFile.name.toLowerCase();
+        if (cleanNameLower.includes("groovevortex")) {
+            songTitle = "GrooveVortex - Original Cinematic Mix";
+            songArtist = "GrooveVortex Recordings Ltd.";
+            songAlbum = "Vortex Cinematic Sounds";
+        } else if (cleanNameLower.includes("coldplay")) {
+            // Inteligentná sémantická detekcia pre skupinu Coldplay
+            const meta = parseAudioMetadata(currentLoadedFile.name);
+            songTitle = meta.title;
+            songArtist = "Coldplay";
+            songAlbum = meta.album !== "Rôzni umelci - Single" && !meta.album.includes("Rôzni") ? meta.album : "A Head Full of Dreams";
+        } else {
+            const meta = parseAudioMetadata(currentLoadedFile.name);
+            songTitle = meta.title;
+            songArtist = meta.artist;
+            songAlbum = meta.album;
+        }
     }
 
     // Aktualizácia popisu na karte Music podľa obrázka
@@ -1843,7 +1856,7 @@ function applyCopyrightClaim(reason) {
     document.getElementById("music-card-cover").classList.add("hidden");
     document.getElementById("music-card-fallback-icon").classList.remove("hidden");
 
-    // Aktualizácia a zobrazenie druhej (Audio) licenčnej tabuľky (Dve tabuľky!)
+    // Odstránenie predchádzajúcej tabuľky a zobrazenie druhej (Audio) licenčnej tabuľky (Dve tabuľky!)
     document.getElementById("audio-claim-track").innerText = songTitle;
     document.getElementById("audio-claim-owner").innerText = songArtist;
     document.getElementById("audio-license-table").classList.remove("hidden");
