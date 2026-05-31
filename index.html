@@ -898,7 +898,7 @@
 <div id="aimonitor-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
     <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 relative flex flex-col gap-4">
         <button onclick="closeAiMonitorModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors">
-            <i class="fa-solid fa-xmark"></i>
+            <i class="fa-solid fa-xmark text-lg"></i>
         </button>
 
         <h3 class="text-lg font-bold text-white flex items-center gap-2 text-microsoft-teal">
@@ -1025,6 +1025,57 @@ function recognizeMovie(filename) {
     return cleanName;
 }
 
+// Inteligentné rozlíšenie autora, piesne a albumu z názvu video súboru pre autorskoprávne nároky
+function parseAudioMetadata(filename) {
+    let clean = filename.replace(/\.[^/.]+$/, "");
+    
+    // Odstránenie prebytočných YouTube tagov, zátvoriek, HD kódov a informácií o rozlíšení
+    clean = clean.replace(/\s*[\(\[][^\)\]]*(official|video|lyrics|clip|hd|1080p|720p|4k|audio|rip|copyright|claim|claim|leak)[^\)\]]*[\)\]]/gi, "");
+    
+    let title = "118 I Couldn't Sing";
+    let artist = "Jake Chudnow";
+    let album = "I Hope My Wife Likes Cheesecake";
+    
+    let parts = [];
+    if (clean.includes(" - ")) {
+        parts = clean.split(" - ");
+    } else if (clean.includes(" – ")) { // en-dash
+        parts = clean.split(" – ");
+    } else if (clean.includes(" — ")) { // em-dash
+        parts = clean.split(" — ");
+    } else if (clean.includes("_-_")) {
+        parts = clean.split("_-_");
+    }
+    
+    // Ak názov súboru obsahuje 3 zložky (Umelec - Skladba - Album)
+    if (parts.length >= 3) {
+        artist = parts[0].trim();
+        title = parts[1].trim();
+        album = parts[2].trim();
+    } 
+    // Ak názov súboru obsahuje 2 zložky (Umelec - Skladba)
+    else if (parts.length === 2) {
+        artist = parts[0].trim();
+        title = parts[1].trim();
+        album = artist + " - Single";
+    } 
+    // Ak sa v súbore nenachádza jasný predel
+    else {
+        title = clean.trim();
+        artist = "Rôzni umelci";
+        album = "Kortex Special Release";
+    }
+    
+    // Pomocná funkcia pre pekné veľké začiatočné písmená
+    const capitalize = (str) => str.replace(/\b\w/g, c => c.toUpperCase());
+    
+    return {
+        title: capitalize(title),
+        artist: capitalize(artist),
+        album: capitalize(album)
+    };
+}
+
 // Inicializácia IndexedDB
 function initDB() {
     return new Promise((resolve, reject) => {
@@ -1118,7 +1169,7 @@ async function submitSecurityVerification() {
     // 1. Meno / ID diváka
     const username = document.getElementById("sec-username").value.trim();
     if (!username) {
-        showSecError("Položka 1 (Meno diváka) musí byť vyplnená.");
+        showSecError("Položka 1 (Meno diváka) mustí byť vyplnená.");
         return;
     }
 
@@ -1771,22 +1822,16 @@ function applyCopyrightClaim(reason) {
     document.getElementById("video-license-status").innerText = "Overený (Prehrávanie povolené)";
     document.getElementById("video-license-status").className = "text-right text-emerald-400 font-bold";
 
-    // Konfigurácia fiktívnych detailov skladby podľa názvu súboru (s prepojením na GrooveVortex)
+    // Dynamická analýza súboru zo zariadenia - rozpoznanie metadát a autora
     let songTitle = "118 I Couldn't Sing";
     let songArtist = "Jake Chudnow";
     let songAlbum = "I Hope My Wife Likes Cheesecake";
 
     if (currentLoadedFile) {
-        const cleanName = currentLoadedFile.name.replace(/\.[^/.]+$/, "");
-        if (cleanName.toLowerCase().includes("groovevortex")) {
-            songTitle = "GrooveVortex - Original Cinematic Mix";
-            songArtist = "GrooveVortex Recordings Ltd.";
-            songAlbum = "Vortex Cinematic Sounds";
-        } else if (!cleanName.toLowerCase().includes("copyright") && !cleanName.toLowerCase().includes("licensed")) {
-            songTitle = `${cleanName} (Licensed Audio)`;
-            songArtist = "Sony Music Group / Universal";
-            songAlbum = "Global Licensing Registry Vol. 4";
-        }
+        const meta = parseAudioMetadata(currentLoadedFile.name);
+        songTitle = meta.title;
+        songArtist = meta.artist;
+        songAlbum = meta.album;
     }
 
     // Aktualizácia popisu na karte Music podľa obrázka
