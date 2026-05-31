@@ -75,7 +75,7 @@
         }
     </style>
 </head>
-<body class="font-sans antialiased selection:bg-microsoft-blue selection:text-white overflow-x-hidden min-h-screen flex flex-col">
+<body class="font-sans antialiased selection:bg-microsoft-blue selection:text-white overflow-x-hidden min-h-screen flex flex-col" onclick="closeAllDropdowns(event)">
 
 <header class="sticky top-0 z-40 backdrop-blur-md bg-slate-950/80 border-b border-slate-800/80 px-6 py-4 flex items-center justify-between">
     <div class="flex items-center gap-3">
@@ -281,10 +281,59 @@
                 <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
                     <i class="fa-solid fa-align-left text-microsoft-teal"></i> Popis videa a kognitívne metadáta
                 </h3>
-                <div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
+                <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 flex flex-col gap-3">
                     <p id="playing-desc" class="text-xs text-slate-400 leading-relaxed">
                         Zariadenie je pripravené. Po nahratí lokálneho súboru Kortex AI prečíta štruktúru kontajnera, extrahuje sémantické tagy, určí fiktívne režijné informácie a vykoná bezpečnostný audit zvukovej i vizuálnej vrstvy.
                     </p>
+                    
+                    <!-- DYNAMICKÁ MUSIC KARTA PODĽA OBRÁZKA (Uplatní sa len pri Copyright Claimi) -->
+                    <div id="music-claim-card" class="bg-slate-950/80 border border-slate-850/60 rounded-2xl p-5 hidden flex flex-col gap-4 mt-2">
+                        <div class="flex flex-col">
+                            <span class="text-2xl font-bold text-white tracking-tight">Music</span>
+                            <span class="text-xs text-slate-500 font-medium mt-0.5">1 songs</span>
+                        </div>
+                        
+                        <div class="flex flex-col sm:flex-row gap-5 items-start sm:items-center">
+                            <!-- Obal albumu / Cover box -->
+                            <div class="relative w-32 h-32 bg-slate-900 rounded-xl border border-slate-800 flex items-center justify-center group/cover overflow-hidden shrink-0">
+                                <img id="music-card-cover" src="" class="w-full h-full object-cover hidden" />
+                                <!-- Predvolená ikona noty podľa vzoru -->
+                                <div id="music-card-fallback-icon" class="text-slate-600 text-5xl">
+                                    <i class="fa-solid fa-music"></i>
+                                </div>
+                                
+                                <!-- Tlačidlo s tromi bodkami (⋮) -->
+                                <button onclick="toggleMusicCardDropdown(event)" class="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-950/80 hover:bg-slate-900/90 border border-slate-800/80 text-slate-300 hover:text-white flex items-center justify-center transition-all z-10" title="Možnosti licencie">
+                                    <i class="fa-ellipsis-vertical fa-solid text-sm"></i>
+                                </button>
+                                
+                                <!-- Dropdown ponuka s možnosťami -->
+                                <div id="music-card-dropdown" class="absolute right-2 top-11 bg-slate-900 border border-slate-800 rounded-xl py-1.5 w-48 shadow-2xl hidden z-20">
+                                    <button onclick="triggerCoverUpload(event)" class="w-full text-left px-3 py-2 text-[11px] text-slate-300 hover:bg-slate-800 hover:text-white transition-colors flex items-center gap-2">
+                                        <i class="fa-solid fa-image"></i> Nahrať vlastný obrázok
+                                    </button>
+                                    <button onclick="showMetadataDetailsModal(event)" class="w-full text-left px-3 py-2 text-[11px] text-slate-300 hover:bg-slate-800 hover:text-white transition-colors flex items-center gap-2">
+                                        <i class="fa-solid fa-circle-info"></i> Detaily licencie
+                                    </button>
+                                    <div class="border-t border-slate-800/60 my-1"></div>
+                                    <button onclick="removeCurrentClaim(event)" class="w-full text-left px-3 py-2 text-[11px] text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors flex items-center gap-2">
+                                        <i class="fa-solid fa-trash"></i> Vymazať nárok (Claim)
+                                    </button>
+                                </div>
+
+                                <!-- Skrytý input na načítanie vlastného cover obrázku -->
+                                <input type="file" id="cover-file-input" class="hidden" accept="image/*" onchange="handleCoverUpload(event)">
+                            </div>
+
+                            <!-- Popisné dáta k pesničke podľa štýlu obrázka -->
+                            <div class="flex-1 flex flex-col justify-center">
+                                <h4 id="music-card-title" class="text-lg font-bold text-white tracking-wide leading-snug">118 I Couldn't Sing</h4>
+                                <p id="music-card-artist" class="text-sm text-slate-400 font-medium mt-1">Jake Chudnow</p>
+                                <p id="music-card-album" class="text-xs text-slate-500 mt-0.5">I Hope My Wife Likes Cheesecake</p>
+                            </div>
+                        </div>
+                    </div>
+
                     <div id="video-specs-meta" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3 pt-3 border-t border-slate-900 text-[11px] font-mono hidden">
                         <div>
                             <span class="text-slate-500 block">REŽISÉR</span>
@@ -631,6 +680,45 @@
     </div>
 </div>
 
+<!-- MODAL: Kortex Music License Details (Vyvolaný tromi bodkami) -->
+<div id="music-details-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden" onclick="closeMusicDetailsModal()">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 relative flex flex-col gap-4" onclick="event.stopPropagation()">
+        <button onclick="closeMusicDetailsModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors">
+            <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+
+        <h3 class="text-lg font-bold text-white flex items-center gap-2 text-amber-500">
+            <i class="fa-solid fa-circle-info"></i> Detaily autorských práv
+        </h3>
+        <p class="text-xs text-slate-400">
+            Podrobnosti o identifikovanej zvukovej stope, ktorá vyvolala obmedzenie prenosu.
+        </p>
+
+        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col gap-2.5 font-mono text-[11px]">
+            <div class="flex justify-between border-b border-slate-900 pb-2">
+                <span class="text-slate-500">NÁZOV SKLADBY:</span>
+                <span class="text-white font-bold text-right ml-2" id="detail-song-name">118 I Couldn't Sing</span>
+            </div>
+            <div class="flex justify-between border-b border-slate-900 pb-2">
+                <span class="text-slate-500">INTERPRET:</span>
+                <span class="text-slate-300 text-right ml-2" id="detail-artist-name">Jake Chudnow</span>
+            </div>
+            <div class="flex justify-between border-b border-slate-900 pb-2">
+                <span class="text-slate-500">ALBUM:</span>
+                <span class="text-slate-400 text-right ml-2" id="detail-album-name">I Hope My Wife Likes Cheesecake</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-slate-500">STAV OCHRANY:</span>
+                <span class="text-amber-400 font-bold text-right ml-2">Copyright Claim (Spustiteľné)</span>
+            </div>
+        </div>
+
+        <button onclick="closeMusicDetailsModal()" class="w-full bg-slate-950 hover:bg-slate-850 text-slate-300 font-semibold text-xs py-3 rounded-xl border border-slate-800 transition-colors">
+            Zatvoriť detaily
+        </button>
+    </div>
+</div>
+
 <!-- MODAL: Microsoft Premium Plány & Platobná Brána -->
 <div id="premium-modal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 hidden">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 md:p-8 flex flex-col gap-8 relative">
@@ -914,6 +1002,9 @@ let isCopyrightActive = true;
 let isVideoBlocked = false;
 let isVideoClaimed = false; // Nový stav: obmedzené prehrávanie bez blokovania
 let currentAppealId = null;
+
+// Sledovanie ID aktuálne vygenerovaného záznamu pre claim
+let currentClaimDbId = null;
 
 // Zámky na zamedzenie duplicitných zápisov a skenovania
 let lastScannedSecond = -1;
@@ -1666,6 +1757,10 @@ function applyCopyrightClaim(reason) {
     // Zobrazenie plávajúceho bannera priamo v prehrávači
     document.getElementById("copyright-claim-banner").classList.remove("hidden");
     
+    // Zobrazenie Kortex Music karty vyrobenej presne podľa obrázkového vzoru
+    document.getElementById("music-claim-card").classList.remove("hidden");
+    document.getElementById("music-claim-card").classList.add("flex");
+    
     // Aktualizácia statusov autorských práv v Telemetrii
     document.getElementById("copyright-status").innerText = "CLAIM AKTÍVNY";
     document.getElementById("copyright-status").className = "text-amber-500 font-bold";
@@ -1677,21 +1772,35 @@ function applyCopyrightClaim(reason) {
     document.getElementById("video-license-status").className = "text-right text-emerald-400 font-bold";
 
     // Konfigurácia fiktívnych detailov skladby podľa názvu súboru (s prepojením na GrooveVortex)
-    let songTitle = "Fiktívny Komerčný Track";
-    let songOwner = "Warner Music Group / Sony Entertainment";
+    let songTitle = "118 I Couldn't Sing";
+    let songArtist = "Jake Chudnow";
+    let songAlbum = "I Hope My Wife Likes Cheesecake";
+
     if (currentLoadedFile) {
         const cleanName = currentLoadedFile.name.replace(/\.[^/.]+$/, "");
         if (cleanName.toLowerCase().includes("groovevortex")) {
             songTitle = "GrooveVortex - Original Cinematic Mix";
-            songOwner = "GrooveVortex Recordings Ltd.";
-        } else {
+            songArtist = "GrooveVortex Recordings Ltd.";
+            songAlbum = "Vortex Cinematic Sounds";
+        } else if (!cleanName.toLowerCase().includes("copyright") && !cleanName.toLowerCase().includes("licensed")) {
             songTitle = `${cleanName} (Licensed Audio)`;
+            songArtist = "Sony Music Group / Universal";
+            songAlbum = "Global Licensing Registry Vol. 4";
         }
     }
 
+    // Aktualizácia popisu na karte Music podľa obrázka
+    document.getElementById("music-card-title").innerText = songTitle;
+    document.getElementById("music-card-artist").innerText = songArtist;
+    document.getElementById("music-card-album").innerText = songAlbum;
+
+    // Reset obalu na pôvodnú notu (ak nie je načítaný užívateľský)
+    document.getElementById("music-card-cover").classList.add("hidden");
+    document.getElementById("music-card-fallback-icon").classList.remove("hidden");
+
     // Aktualizácia a zobrazenie druhej (Audio) licenčnej tabuľky (Dve tabuľky!)
     document.getElementById("audio-claim-track").innerText = songTitle;
-    document.getElementById("audio-claim-owner").innerText = songOwner;
+    document.getElementById("audio-claim-owner").innerText = songArtist;
     document.getElementById("audio-license-table").classList.remove("hidden");
 
     logAIGuard(`[COPYRIGHT CLAIM] Pod video bol pridaný autorskoprávny nárok. Hudba: "${songTitle}". Sledovanie videa je povolené.`);
@@ -1710,12 +1819,21 @@ function applyCopyrightClaim(reason) {
                 timestamp: Date.now(),
                 appealed: false,
                 appealResult: null,
-                appealText: ""
+                appealText: "",
+                // Polia pre dáta karty z obrázka
+                songTitle: songTitle,
+                songArtist: songArtist,
+                songAlbum: songAlbum,
+                customCover: null
             };
 
             const transaction = db.transaction("blocked_videos", "readwrite");
             const store = transaction.objectStore("blocked_videos");
-            store.add(claimData);
+            const request = store.add(claimData);
+            
+            request.onsuccess = (event) => {
+                currentClaimDbId = event.target.result; // Uložíme ID záznamu
+            };
             
             transaction.oncomplete = () => {
                 logAIGuard("[SYSTEM] Incident autorských práv bol zapísaný do IndexedDB archívu.");
@@ -1728,6 +1846,106 @@ function applyCopyrightClaim(reason) {
 
 function dismissClaimBanner() {
     document.getElementById("copyright-claim-banner").classList.add("hidden");
+}
+
+// Funkcie pre správu a interakciu s Music kartou (podľa obrázka)
+function toggleMusicCardDropdown(event) {
+    event.stopPropagation();
+    const dropdown = document.getElementById("music-card-dropdown");
+    dropdown.classList.toggle("hidden");
+}
+
+function triggerCoverUpload(event) {
+    event.stopPropagation();
+    document.getElementById("cover-file-input").click();
+    document.getElementById("music-card-dropdown").classList.add("hidden");
+}
+
+// Načítanie a spracovanie vlastného obalu
+function handleCoverUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const dataUrl = e.target.result;
+        
+        // Zobrazíme na karte vlastný nahraný obrázok namiesto noty
+        const coverImg = document.getElementById("music-card-cover");
+        coverImg.src = dataUrl;
+        coverImg.classList.remove("hidden");
+        document.getElementById("music-card-fallback-icon").classList.add("hidden");
+
+        logAIGuard("[MUSIC CARD] Obal pesničky bol úspešne nahraný a zmenený divákom.");
+
+        // Uložíme obrázok obalu k príslušnému záznamu do IndexedDB
+        if (db && currentClaimDbId) {
+            const transaction = db.transaction("blocked_videos", "readwrite");
+            const store = transaction.objectStore("blocked_videos");
+            const request = store.get(currentClaimDbId);
+
+            request.onsuccess = () => {
+                const item = request.result;
+                if (item) {
+                    item.customCover = dataUrl;
+                    store.put(item);
+                }
+            };
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+// Zobrazenie detailov z karty po kliknutí na tri bodky
+function showMetadataDetailsModal(event) {
+    event.stopPropagation();
+    document.getElementById("music-card-dropdown").classList.add("hidden");
+
+    // Získanie hodnôt z karty
+    const title = document.getElementById("music-card-title").innerText;
+    const artist = document.getElementById("music-card-artist").innerText;
+    const album = document.getElementById("music-card-album").innerText;
+
+    // Priradenie do modálneho okna detailov
+    document.getElementById("detail-song-name").innerText = title;
+    document.getElementById("detail-artist-name").innerText = artist;
+    document.getElementById("detail-album-name").innerText = album;
+
+    // Zobrazenie modal okná
+    document.getElementById("music-details-modal").classList.remove("hidden");
+}
+
+function closeMusicDetailsModal() {
+    document.getElementById("music-details-modal").classList.add("hidden");
+}
+
+// Vymazanie autorskoprávneho nároku (Claimu) cez tri bodky
+function removeCurrentClaim(event) {
+    event.stopPropagation();
+    document.getElementById("music-card-dropdown").classList.add("hidden");
+
+    if (db && currentClaimDbId) {
+        const transaction = db.transaction("blocked_videos", "readwrite");
+        const store = transaction.objectStore("blocked_videos");
+        store.delete(currentClaimDbId);
+
+        transaction.oncomplete = () => {
+            logAIGuard("[SYSTEM] Autorskoprávny nárok (Claim) bol úspešne stiahnutý a vymazaný z IndexedDB databázy.");
+            resetBlockState();
+            loadQuarantineGrid();
+        };
+    } else {
+        // Lokálny reset ak nebol zapísaný v DB
+        resetBlockState();
+    }
+}
+
+// Bezpečné zatvorenie všetkých dropdownov pri kliknutí mimo nich
+function closeAllDropdowns(event) {
+    const dropdown = document.getElementById("music-card-dropdown");
+    if (dropdown && !dropdown.classList.contains("hidden")) {
+        dropdown.classList.add("hidden");
+    }
 }
 
 async function blockVideoByAI(reason, type) {
@@ -2169,10 +2387,18 @@ function resetBlockState() {
     isVideoClaimed = false;
     lastScannedSecond = -1;
     isScanningInProgress = false;
+    currentClaimDbId = null;
     
     document.getElementById("ai-blocked-overlay").classList.add("hidden");
     document.getElementById("copyright-claim-banner").classList.add("hidden");
     document.getElementById("audio-license-table").classList.add("hidden");
+    
+    // Skryť a resetovať Music kartu
+    document.getElementById("music-claim-card").classList.add("hidden");
+    document.getElementById("music-claim-card").classList.remove("flex");
+    document.getElementById("music-card-cover").src = "";
+    document.getElementById("music-card-cover").classList.add("hidden");
+    document.getElementById("music-card-fallback-icon").classList.remove("hidden");
     
     document.getElementById("licensing-badge").innerText = "Licencia: Bezpečná";
     document.getElementById("licensing-badge").className = "bg-emerald-950 border border-emerald-900 text-emerald-400 px-2.5 py-1 rounded-lg";
