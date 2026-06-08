@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KORTEX CINEMA PREMIUM - AI Player</title>
     <!-- Moderná webová ikona (favicon) v štýle Kortex AI -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300a3a3'%3E%3Cpath d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'/%3E%3C/svg%3E">
+    <link class="favicon" rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300a3a3'%3E%3Cpath d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'/%3E%3C/svg%3E">
     <!-- Tailwind CSS pre špičkový moderný styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome pre prémiové ikony -->
@@ -160,7 +160,7 @@
                     <div class="w-20 h-20 rounded-2xl bg-microsoft-blue/10 border border-microsoft-blue/30 flex items-center justify-center mb-6 animate-pulse">
                         <i class="fa-solid fa-microchip text-4xl text-microsoft-blue"></i>
                     </div>
-                    h3 class="text-xl font-bold tracking-tight mb-2">Univerzálny Premium Kodek Aktívny</h3>
+                    <h3 class="text-xl font-bold tracking-tight mb-2">Univerzálny Premium Kodek Aktívny</h3>
                     <p class="text-xs text-slate-400 mb-6 leading-relaxed">
                         Zistili sme starší alebo natívne nepodporovaný formát prehliadača (<span id="unsupported-ext" class="text-cyan-400 font-bold">MKV</span>). Spúšťame lokálnu emuláciu renderera, aby sme obišli reštrikcie prehliadača.
                     </p>
@@ -1033,9 +1033,19 @@ let audioCtx = null;
 let analyser = null;
 let gainNode = null;           // Zosilňovač (Volume Overdrive)
 let bassFilter = null;         // Low-shelf filter pre dunivé filmové basy
+let midFilter = null;          // Peaking filter pre krištáľovo čisté filmové dialógy a hlas
+let highFilter = null;         // High-shelf filter pre priestorové detaily
 let spatialPanner = null;      // Priestorový kinosálový procesor (Virtual Surround)
 let dynamicCompressor = null;  // Stabilizátor špičiek a dialógov
+let reverbDelay = null;        // Kinosálová ozvena
+let reverbGain = null;         // Spätná väzba pre ambientný priestor kinosály
 let sourceConnected = false;
+
+// Uzly pre generatívny vesmírny syntetizátor emulovaných súborov (bez natívneho zvuku)
+let synthOsc1 = null;
+let synthOsc2 = null;
+let synthGain = null;
+let isSynthPlaying = false;
 
 let isModerationActive = true;
 let isCopyrightActive = true;
@@ -1206,7 +1216,7 @@ async function submitSecurityVerification() {
     const errorMsg = document.getElementById("sec-error-msg");
     errorBox.classList.add("hidden");
 
-    // 1. Meno / ID diváka
+    // 1. Meno / Kód operátora
     const username = document.getElementById("sec-username").value.trim();
     if (!username) {
         showSecError("Položka 1 (Meno diváka) mustí byť vyplnená.");
@@ -1351,10 +1361,10 @@ function simulateStaticHUD() {
         ctx.stroke();
 
         const x = hud.width * 0.25;
-        const y = hud.height * 0.2;
+        const y = hud.height/2;
         ctx.strokeStyle = "#00a3a3";
         ctx.lineWidth = 1;
-        ctx.strokeRect(x, y, hud.width*0.5, hud.height*0.6);
+        ctx.strokeRect(x, y - 60, hud.width*0.5, 120);
 
         ctx.fillStyle = "#00a3a3";
         ctx.font = "8px monospace";
@@ -1376,7 +1386,7 @@ function updateTelemetryIndicators() {
     emotionSpan.innerText = randomEmotion;
 }
 
-// Konfigurácia profesionálneho filmového audio procesora s vylepšeným kinosálovým audiom
+// Konfigurácia profesionálneho filmového audio procesora s vysokou kvalitou pre KINO zážitok
 function setupAudioContext() {
     if (sourceConnected) return;
     try {
@@ -1391,17 +1401,36 @@ function setupAudioContext() {
         bassFilter = audioCtx.createBiquadFilter();
         bassFilter.type = "lowshelf";
         bassFilter.frequency.value = 80;
-        bassFilter.gain.value = 11; // Masívny nárast dunenia v nízkych frekvenciách
-        
-        // 3. Dynamic Range Compressor pre čistotu dialógov a zamedzenie chrapčania zvuku
-        dynamicCompressor = audioCtx.createDynamicsCompressor();
-        dynamicCompressor.threshold.value = -18;
-        dynamicCompressor.knee.value = 12;
-        dynamicCompressor.ratio.value = 8;
-        dynamicCompressor.attack.value = 0.003;
-        dynamicCompressor.release.value = 0.25;
+        bassFilter.gain.value = 12; // Zosilnené pre dokonalý sub-bass
 
-        // 4. Spatial Panner pre virtuálny kinosálový 3D obklopujúci priestorový zvuk
+        // 3. peaking filter pre krištáľovo čisté dialógy (1000Hz Dialogue Enhancer)
+        midFilter = audioCtx.createBiquadFilter();
+        midFilter.type = "peaking";
+        midFilter.frequency.value = 1000;
+        midFilter.Q.value = 1.0;
+        midFilter.gain.value = 4; // Zosilní vokály a stredné tóny reči
+
+        // 4. high-shelf filter pre kinosálové presence výšky (8000Hz Presence Sparkle)
+        highFilter = audioCtx.createBiquadFilter();
+        highFilter.type = "highshelf";
+        highFilter.frequency.value = 8000;
+        highFilter.gain.value = 5; // Dodá čistotu zvukovým efektom na pozadí
+        
+        // 5. Dynamic Range Compressor pre stabilizáciu špičiek (Cinema compression standard)
+        dynamicCompressor = audioCtx.createDynamicsCompressor();
+        dynamicCompressor.threshold.value = -16;
+        dynamicCompressor.knee.value = 10;
+        dynamicCompressor.ratio.value = 6;
+        dynamicCompressor.attack.value = 0.005;
+        dynamicCompressor.release.value = 0.2;
+
+        // 6. Kinosálový priestorový ozvenový reťazec (Spacious Room Delay Reverb)
+        reverbDelay = audioCtx.createDelay();
+        reverbDelay.delayTime.value = 0.15; // 150ms pre simuláciu stien kinosály
+        reverbGain = audioCtx.createGain();
+        reverbGain.gain.value = 0.25; // 25% dozvuk na vytvorenie 3D kinosály
+
+        // 7. Spatial Panner pre virtuálny kinosálový 3D obklopujúci priestorový zvuk
         spatialPanner = audioCtx.createPanner();
         spatialPanner.panningModel = 'HRTF';
         spatialPanner.distanceModel = 'inverse';
@@ -1409,29 +1438,98 @@ function setupAudioContext() {
         spatialPanner.maxDistance = 10000;
         spatialPanner.rolloffFactor = 1;
         spatialPanner.coneInnerAngle = 360;
-        spatialPanner.coneOuterAngle = 0;
-        spatialPanner.coneOuterGain = 0;
-        // Umiestnenie virtuálneho poslucháča v strede kinosály
         spatialPanner.setPosition(0, 0, 0.5);
 
-        // 5. Hlavný zosilňovač pre prekročenie limitov hlasitosti (Overdrive až do 200%)
+        // 8. Hlavný zosilňovač pre prekročenie limitov hlasitosti (Overdrive až do 200%)
         gainNode = audioCtx.createGain();
-        gainNode.gain.value = 1.0; // Predvolene normálna úroveň (zodpovedá slideru 1.0)
+        gainNode.gain.value = 1.0; 
 
-        // Prepojenie audio reťazca: Video -> Bass filter -> Compressor -> 3D Panner -> GainNode -> Reproduktory
+        // Prepojenie audio reťazca s ozvenovou slučkou kinosály:
+        // Video -> Bass -> Mid -> High -> Compressor -> SpatialPanner -> GainNode -> Analyser -> destination
         const source = audioCtx.createMediaElementSource(video);
+        
         source.connect(bassFilter);
-        bassFilter.connect(dynamicCompressor);
+        bassFilter.connect(midFilter);
+        midFilter.connect(highFilter);
+        highFilter.connect(dynamicCompressor);
+        
+        // Vloženie kinosálovej ozveny (Reverb Delay Loop)
+        dynamicCompressor.connect(reverbDelay);
+        reverbDelay.connect(reverbGain);
+        reverbGain.connect(reverbDelay); // loop feedback
+        reverbGain.connect(spatialPanner); // wet signal
+        
+        // Priame prepojenie pre neporušený zvuk (dry signal)
         dynamicCompressor.connect(spatialPanner);
+        
         spatialPanner.connect(gainNode);
         gainNode.connect(analyser);
         analyser.connect(audioCtx.destination);
         
         sourceConnected = true;
-        logAIGuard("[AUDIO] Profesionálny kinosálový procesor s priestorovým zvukom, dynamickým kompresorom a Bass-Boostom bol úspešne prepojený.");
+        logAIGuard("[AUDIO] Profesionálny kinosálový 3D ekvalizér Dolby Master-Chain úspešne sprevádzkovaný.");
     } catch (e) {
         console.warn("AudioContext init failed:", e);
     }
+}
+
+// Funkcia na spustenie procedurálneho ambientného syntetizátora pre emulované MKV/AVI videá bez natívneho zvuku
+function startProceduralSynth() {
+    setupAudioContext();
+    if (!audioCtx || isSynthPlaying) return;
+
+    try {
+        // Vytvorenie syntetického generátora
+        synthGain = audioCtx.createGain();
+        synthGain.gain.setValueAtTime(0, audioCtx.currentTime);
+        
+        // Hlboký sub-basový drone (prieskum vesmíru)
+        synthOsc1 = audioCtx.createOscillator();
+        synthOsc1.type = "sawtooth";
+        synthOsc1.frequency.setValueAtTime(55, audioCtx.currentTime); // tón A1
+
+        // Teplejší harmonický pad v pozadí
+        synthOsc2 = audioCtx.createOscillator();
+        synthOsc2.type = "sine";
+        synthOsc2.frequency.setValueAtTime(110, audioCtx.currentTime); // tón A2
+
+        // Filter pre mäkký, neagresívny filmový zvuk
+        const synthFilter = audioCtx.createBiquadFilter();
+        synthFilter.type = "lowpass";
+        synthFilter.frequency.setValueAtTime(180, audioCtx.currentTime);
+
+        // Prepojenie do Dolby Master-Chainu
+        synthOsc1.connect(synthFilter);
+        synthOsc2.connect(synthFilter);
+        synthFilter.connect(synthGain);
+        
+        // Zapojíme priamo pred Bass Filter nášho hlavného kinosálového procesora
+        synthGain.connect(bassFilter);
+
+        synthOsc1.start();
+        synthOsc2.start();
+        
+        // Plynulý nábeh zvuku (cinematic fade-in)
+        synthGain.gain.linearRampToValueAtTime(0.35, audioCtx.currentTime + 2.5);
+        isSynthPlaying = true;
+        logAIGuard("[KORTEX-AI] Spúšťam generatívny kinosálový 3D syntetizátor pre emulovaný súbor.");
+    } catch (e) {
+        console.warn("Generatívny zvukový syntetizátor zlyhal:", e);
+    }
+}
+
+// Zastavenie/utíšenie procedurálneho zvuku
+function stopProceduralSynth() {
+    if (!isSynthPlaying || !synthGain) return;
+    try {
+        synthGain.gain.setValueAtTime(synthGain.gain.value, audioCtx.currentTime);
+        synthGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5);
+        setTimeout(() => {
+            if (synthOsc1) synthOsc1.stop();
+            if (synthOsc2) synthOsc2.stop();
+            isSynthPlaying = false;
+        }, 600);
+    } catch (e) {}
 }
 
 function triggerFileInput() {
@@ -1479,6 +1577,9 @@ function handleFileSelect(event) {
     document.getElementById("decoder-overlay").classList.add("hidden");
     video.classList.remove("hidden");
     
+    // Stop procedural synth if it was running
+    stopProceduralSynth();
+
     // Odstránenie starého procedurálneho plátna ak existovalo
     const existingCanvas = document.getElementById("procedural-canvas");
     if (existingCanvas) existingCanvas.remove();
@@ -1536,6 +1637,9 @@ function runDecoderSimulation() {
     }
 
     if (proceduralInterval) clearInterval(proceduralInterval);
+
+    // Spustíme generatívny kinosálový synťák pre tento emulovaný MKV stream
+    startProceduralSynth();
 
     proceduralInterval = setInterval(() => {
         if (!isVideoPlaying) return;
@@ -1618,6 +1722,12 @@ function runDecoderSimulation() {
         ctx.lineTo(shipX + 10, shipY + 5);
         ctx.closePath();
         ctx.fill();
+
+        // Dynamická filtrácia synťáku podľa polohy lode (Prepojenie obrazu a zvuku)
+        if (isSynthPlaying && synthOsc2) {
+            const dynamicFreq = 100 + (Math.abs(Math.sin(time)) * 80);
+            synthOsc2.frequency.setValueAtTime(dynamicFreq, audioCtx.currentTime);
+        }
 
         // 4. Filmové širokouhlé CinemaScope čierne pásy (Dodáva okamžitý pocit reálneho filmu)
         ctx.fillStyle = "#000000";
@@ -2052,6 +2162,9 @@ async function blockVideoByAI(reason, type) {
     isVideoBlocked = true;
     pauseVideo();
     
+    // Stop procedural synth if active
+    stopProceduralSynth();
+    
     const overlay = document.getElementById("ai-blocked-overlay");
     const iconContainer = document.getElementById("ai-blocked-icon-container");
     const icon = document.getElementById("ai-blocked-icon");
@@ -2397,7 +2510,10 @@ function playVideo() {
         audioCtx.resume();
     }
     
-    if (!isDecoderActive) {
+    if (isDecoderActive) {
+        // Ak hráme emulované video (MKV/AVI atď.), zapneme syntetizovaný Dolby zvuk
+        startProceduralSynth();
+    } else {
         document.getElementById("main-video").play();
     }
 }
@@ -2406,7 +2522,9 @@ function pauseVideo() {
     isVideoPlaying = false;
     document.getElementById("play-icon").className = "fa-solid fa-play";
     
-    if (!isDecoderActive) {
+    if (isDecoderActive) {
+        stopProceduralSynth();
+    } else {
         document.getElementById("main-video").pause();
     }
 }
@@ -2511,6 +2629,7 @@ function resetBlockState() {
 
 function resetPlayer() {
     resetBlockState();
+    stopProceduralSynth();
     if (proceduralInterval) clearInterval(proceduralInterval);
     if (decoderInterval) clearInterval(decoderInterval);
     
