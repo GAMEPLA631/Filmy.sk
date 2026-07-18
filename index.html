@@ -585,9 +585,12 @@
                                 <i class="fa-solid fa-gift text-yellow-400 text-xl animate-bounce"></i>
                             </div>
                             <h3 class="font-orbitron font-bold text-xl text-yellow-400">1 ROK BEZPLATNE</h3>
-                            <p class="text-xs text-gray-400 mt-1 mb-4">Všetko neobmedzené, žiadna platba!</p>
-                            <div class="font-orbitron font-black text-3xl text-yellow-400 my-3 flex items-baseline">
-                                <span>0.00 €</span><span class="text-xs text-gray-500 font-normal ml-1">/ 1 Rok</span>
+                            <p class="text-xs text-gray-400 mt-1 mb-4">Všetko neobmedzené, prvý rok úplne zadarmo!</p>
+                            <div class="font-orbitron font-black text-3xl text-yellow-400 my-3 flex flex-col items-baseline">
+                                <div class="flex items-baseline">
+                                    <span>0.00 €</span><span class="text-xs text-gray-500 font-normal ml-1">/ Prvý Rok</span>
+                                </div>
+                                <span class="text-[11px] text-pink-400 font-normal mt-1">(Následná obnova: 285.99 € / Rok)</span>
                             </div>
                             <ul class="space-y-2.5 text-xs text-gray-400 border-t border-yellow-500/10 pt-4">
                                 <li><i class="fa-solid fa-check text-yellow-400 mr-2"></i>Plný Ultra 4K/8K prenos</li>
@@ -1022,12 +1025,18 @@
             if (currentUser.enrolledTariff && currentUser.tariffExpiresAt) {
                 if (now >= currentUser.tariffExpiresAt) {
                     const expiredName = currentUser.enrolledTariff.name;
+                    const expiredId = currentUser.enrolledTariff.id;
                     currentUser.enrolledTariff = null;
                     currentUser.tariffExpiresAt = null;
                     updated = true;
                     
                     showNotification(`Vaša tarifa '${expiredName}' vypršala! Prístup bol zablokovaný.`, "error");
-                    createNoticeModal("UPLYNUTIE TARIFY", `Vaša tarifa <strong>${expiredName}</strong> práve oficiálne vypršala. Ak chcete pokračovať v streamovaní a nahrávaní súborov, musíte si kúpiť novú tarifu.`);
+                    
+                    let expiredDetails = `Vaša tarifa <strong>${expiredName}</strong> práve oficiálne vypršala. Ak chcete pokračovať v streamovaní a nahrávaní súborov, musíte si kúpiť novú tarifu.`;
+                    if (expiredId === 9) {
+                        expiredDetails = `Vaša bezplatná promo tarifa <strong>1 ROK BEZPLATNE</strong> úspešne vypršala. Pre ďalšie pokračovanie v tomto neobmedzenom ročnom programe je teraz potrebné prejsť na platenú verziu v cene <strong>285.99 € / Rok</strong>, prípadne si zvoliť inú z našich mesačných taríf.`;
+                    }
+                    createNoticeModal("UPLYNUTIE TARIFY", expiredDetails);
                     stopPlayback();
                 }
             }
@@ -1249,7 +1258,7 @@
             await recordTransactionInDB(tx);
             showNotification("Bezplatný ročný balík aktivovaný úspešne!", "success");
             
-            createNoticeModal("PROMO AKTIVOVANÉ", `Prémiová licencia <strong>1 ROK BEZPLATNE</strong> bola aktivovaná na Vaše ID. Užite si neobmedzené nahrávanie a prehrávanie.<br><br>Platnosť do: <strong>${new Date(expirationTimestamp).toLocaleDateString('sk-SK')}</strong>`);
+            createNoticeModal("PROMO AKTIVOVANÉ", `Prémiová licencia <strong>1 ROK BEZPLATNE</strong> bola aktivovaná na Vaše ID. Užite si neobmedzené nahrávanie a prehrávanie.<br><br>Platnosť do: <strong>${new Date(expirationTimestamp).toLocaleDateString('sk-SK')}</strong>.<br><br>Berte prosím na vedomie, že po roku táto bezplatná fáza končí a ďalšie predĺženie bude spoplatnené sumou <strong>285.99 €</strong>.`);
             
             await checkTariffAndRobotExpiration();
         }
