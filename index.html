@@ -346,7 +346,7 @@
                                 <label class="cursor-pointer block">
                                     <i class="fa-solid fa-cloud-arrow-up text-cyan-400 text-2xl mb-1.5"></i>
                                     <span class="block text-sm font-orbitron font-bold text-white">Rýchle nahratie videa</span>
-                                    <span class="block text-[10px] text-gray-500 mt-0.5">Podpora MP4, WEBM, MKV, AVI</span>
+                                    <span class="block text-[10px] text-gray-500 mt-0.5">Podpora extrémne veľkých súborov (GB+) MP4, WEBM, MKV, AVI</span>
                                     <input type="file" id="file-quick-upload" accept="video/*" class="hidden" onchange="handleFileSelected(event)">
                                 </label>
                             </div>
@@ -379,12 +379,12 @@
                 </div>
 
                 <!-- Limits Alert banner -->
-                <div class="p-4 rounded-xl border border-cyan-500/20 bg-cyan-500/[0.03] flex items-center gap-3">
-                    <i class="fa-solid fa-circle-info text-cyan-400 text-lg"></i>
-                    <p class="text-xs text-gray-300">
-                        Keďže nepoužívame <code class="text-cyan-300 font-mono">localStorage</code> (ktoré má limit len 5MB), môžeme vďaka <strong class="text-white">IndexedDB</strong> bez problémov ukladať reálne filmy a videá v desiatkach gigabajtov na základe voľného miesta na disku!
-                    </p>
-                </div>
+            <div class="p-4 rounded-xl border border-cyan-500/20 bg-cyan-500/[0.03] flex items-center gap-3">
+                <i class="fa-solid fa-circle-info text-cyan-400 text-lg"></i>
+                <p class="text-xs text-gray-300">
+                    Keďže nepoužívame <code class="text-cyan-300 font-mono">localStorage</code>, ale <strong class="text-white">IndexedDB s priamym ukladaním streamu</strong>, môžete bez problémov vkladať reálne filmy a videá v desiatkach gigabajtov na základe voľného miesta na disku bez zahltenia RAM!
+                </p>
+            </div>
 
                 <!-- Grid of saved videos -->
                 <div id="vault-media-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1336,33 +1336,30 @@
             const file = e.target.files[0];
             if (!file) return;
 
-            // Save file as Blob straight to IndexedDB
-            const fileReader = new FileReader();
-            
-            showNotification("Čítanie súboru a šifrovanie v priebehu...", "info");
-            
-            fileReader.onload = async function(event) {
-                try {
-                    const videoBlob = new Blob([event.target.result], { type: file.type });
-                    const record = {
-                        username: currentUser.username,
-                        title: file.name.replace(/\.[^/.]+$/, ""), // remove extension
-                        fileName: file.name,
-                        fileSize: (file.size / (1024 * 1024)).toFixed(1) + ' MB',
-                        videoBlob: videoBlob,
-                        addedAt: getSimulatedDate().getTime()
-                    };
+            const sizeFormatted = file.size > 1024 * 1024 * 1024 
+                ? (file.size / (1024 * 1024 * 1024)).toFixed(2) + ' GB' 
+                : (file.size / (1024 * 1024)).toFixed(1) + ' MB';
 
-                    await saveVideoToDB(record);
-                    showNotification(`Súbor '${file.name}' uložený do trezora!`, "success");
-                    loadUserMediaLibrary();
-                } catch(err) {
-                    console.error("Uloženie videa zlyhalo:", err);
-                    showNotification("Chyba pri ukladaní veľkého videa do IndexedDB.", "error");
-                }
-            };
+            // Priame uloženie File objektu (ktorý je podtriedou Blobu) zabráni pádom pamäte RAM pri gigabajtových súboroch
+            showNotification(`Vkladám veľký súbor: ${file.name} (${sizeFormatted})...`, "info");
+            
+            try {
+                const record = {
+                    username: currentUser.username,
+                    title: file.name.replace(/\.[^/.]+$/, ""), // odstránenie prípony
+                    fileName: file.name,
+                    fileSize: sizeFormatted,
+                    videoBlob: file, // Ukladáme surový Blob/File priamo, žiadny FileReader!
+                    addedAt: getSimulatedDate().getTime()
+                };
 
-            fileReader.readAsArrayBuffer(file);
+                await saveVideoToDB(record);
+                showNotification(`Veľký súbor '${file.name}' bol úspešne zapísaný do lokálneho trezora!`, "success");
+                loadUserMediaLibrary();
+            } catch(err) {
+                console.error("Uloženie veľkého súboru zlyhalo:", err);
+                showNotification("Chyba pri ukladaní. Skontrolujte voľné miesto na disku.", "error");
+            }
         }
 
         function saveVideoToDB(video) {
