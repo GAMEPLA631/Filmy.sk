@@ -66,6 +66,58 @@
         .visualizer-bar {
             transition: height 0.05s ease;
         }
+        /* Pestrofarebný gradient slider (Rainbow Track) */
+        input[type="range"].colorful-slider {
+            background: linear-gradient(90deg, #06b6d4 0%, #d946ef 35%, #eab308 70%, #a855f7 100%) !important;
+            height: 6px;
+            border-radius: 4px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        input[type="range"].colorful-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 2px solid #00ffff;
+            box-shadow: 0 0 10px rgba(6, 182, 212, 0.8);
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+        input[type="range"].colorful-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.25);
+        }
+        /* Modernizovaný beztrhavý Fullscreen pre prehravač */
+        #video-player-wrapper:fullscreen {
+            background-color: #020205 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #video-player-wrapper:fullscreen video {
+            max-height: 100vh !important;
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: contain !important;
+        }
+        #video-player-wrapper:fullscreen #player-controls-container {
+            bottom: 24px !important;
+            left: 24px !important;
+            right: 24px !important;
+            background: rgba(10, 8, 22, 0.95) !important;
+            backdrop-filter: blur(12px) !important;
+            border: 1px solid rgba(6, 182, 212, 0.3) !important;
+            border-radius: 16px !important;
+            padding: 20px !important;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        #video-player-wrapper:fullscreen:hover #player-controls-container {
+            opacity: 1 !important;
+        }
         /* Hologram Grid Background Effect */
         .hologram-grid {
             background-image: linear-gradient(rgba(6, 182, 212, 0.04) 1px, transparent 1px),
@@ -252,7 +304,7 @@
                     
                     <!-- Player left layout -->
                     <div class="lg:col-span-2 space-y-4">
-                        <div class="relative rounded-2xl overflow-hidden glass-panel border border-cyan-500/20 bg-black aspect-video group">
+                        <div id="video-player-wrapper" class="relative rounded-2xl overflow-hidden glass-panel border border-cyan-500/20 bg-black aspect-video group">
                             
                             <!-- Native HTML Video tag -->
                             <video id="cyber-video-node" class="w-full h-full object-contain" poster="https://placehold.co/800x450/0b0914/00ffff?text=CYBER-STREAM+PLAYBACK"></video>
@@ -287,7 +339,7 @@
                                 <!-- Progress Track -->
                                 <div class="flex items-center gap-3">
                                     <span id="player-time-current" class="text-xs font-mono text-cyan-400">00:00</span>
-                                    <input type="range" id="player-progress-bar" min="0" max="100" value="0" step="0.1" class="flex-1 h-1 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-cyan-400 focus:outline-none">
+                                    <input type="range" id="player-progress-bar" min="0" max="100" value="0" step="0.1" class="colorful-slider flex-1 h-1.5 appearance-none cursor-pointer focus:outline-none">
                                     <span id="player-time-total" class="text-xs font-mono text-gray-400">00:00</span>
                                 </div>
 
@@ -576,7 +628,7 @@
                         <button onclick="openPaymentGateway(8, 'COSMOS INFINITY', 89.99, 365)" class="w-full mt-6 py-2.5 bg-cyan-500/10 hover:bg-cyan-400 hover:text-black font-orbitron font-bold border border-cyan-500/30 hover:border-transparent text-cyan-400 text-sm tracking-wide rounded-lg transition">KÚPIŤ LICENCIU</button>
                     </div>
 
-                    <!-- Tarifa 9 (FREE VERSION FOR 1 YEAR) -->
+                    <!-- Tarifa 9 (FREE VERSION FOR 1 YEAR WITH HOLIDAY / NEW USER RULES) -->
                     <div class="glass-panel border-2 border-yellow-500/40 hover:border-yellow-500/80 hover:scale-[1.02] rounded-2xl p-6 flex flex-col justify-between transition duration-300 relative group neon-border-yellow bg-yellow-500/[0.02]">
                         <div class="absolute -top-3 right-4 bg-yellow-500 text-black text-[9px] font-orbitron font-black px-2 py-0.5 rounded uppercase tracking-wider">DARČEK PLATFORMY</div>
                         <div>
@@ -586,11 +638,8 @@
                             </div>
                             <h3 class="font-orbitron font-bold text-xl text-yellow-400">1 ROK BEZPLATNE</h3>
                             <p class="text-xs text-gray-400 mt-1 mb-4">Všetko neobmedzené, prvý rok úplne zadarmo!</p>
-                            <div class="font-orbitron font-black text-3xl text-yellow-400 my-3 flex flex-col items-baseline">
-                                <div class="flex items-baseline">
-                                    <span>0.00 €</span><span class="text-xs text-gray-500 font-normal ml-1">/ Prvý Rok</span>
-                                </div>
-                                <span class="text-[11px] text-pink-400 font-normal mt-1">(Následná obnova: 285.99 € / Rok)</span>
+                            <div id="tar9-price-display" class="font-orbitron font-black text-3xl text-yellow-400 my-3 flex flex-col items-baseline">
+                                <!-- Dynamicky renderované cez renderTariffs() -->
                             </div>
                             <ul class="space-y-2.5 text-xs text-gray-400 border-t border-yellow-500/10 pt-4">
                                 <li><i class="fa-solid fa-check text-yellow-400 mr-2"></i>Plný Ultra 4K/8K prenos</li>
@@ -598,7 +647,9 @@
                                 <li><i class="fa-solid fa-check text-yellow-400 mr-2"></i>Platnosť presne 365 dní bez poplatku</li>
                             </ul>
                         </div>
-                        <button onclick="handleFreeActivation()" class="w-full mt-6 py-2.5 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-black font-orbitron font-bold text-sm tracking-wide rounded-lg transition">AKTIVOVAŤ ZADARMO</button>
+                        <button id="tar9-button-display" onclick="handleFreeActivation()" class="w-full mt-6 py-2.5 text-black font-orbitron font-bold text-sm tracking-wide rounded-lg transition">
+                            <!-- Dynamicky renderované cez renderTariffs() -->
+                        </button>
                     </div>
 
                 </div>
@@ -872,6 +923,7 @@
             updateSimulatedClock();
             if (currentUser) {
                 await checkTariffAndRobotExpiration();
+                renderTariffs();
             }
         }
 
@@ -941,7 +993,8 @@
                     enrolledTariff: null,
                     tariffExpiresAt: null,
                     // Auto-grant 24 hours of robot-check waiver upon sign up
-                    lastCaptchaVerifiedAt: getSimulatedDate().getTime()
+                    lastCaptchaVerifiedAt: getSimulatedDate().getTime(),
+                    isNewUser: true
                 };
 
                 await saveUserToDB(newUser);
@@ -977,6 +1030,7 @@
             checkTariffAndRobotExpiration().then(() => {
                 loadUserMediaLibrary();
                 generateCaptcha();
+                renderTariffs();
                 navigate('player');
             });
         }
@@ -1122,6 +1176,64 @@
             // Load specifics when page entered
             if (sectionId === 'history') {
                 loadTransactionsHistory();
+            } else if (sectionId === 'tariffs') {
+                renderTariffs();
+            }
+        }
+
+        // SEZÓNNE & NOVÁČIKOVSKÉ PRAVIDLÁ PRE TARIFU 9
+        function isChristmasSeason(date) {
+            const m = date.getMonth(); // 11 = December, 0 = Január
+            const d = date.getDate();
+            // Od 20. decembra do 2. januára (vrátane Vianoc, Silvestra a Nového Roka)
+            if (m === 11 && d >= 20) return true;
+            if (m === 0 && d <= 2) return true;
+            return false;
+        }
+
+        function getTariff9Price() {
+            if (!currentUser) return 285.99;
+            const now = getSimulatedDate();
+            
+            // 1. Ak je vianočné/silvestrovské obdobie -> 0.00 €
+            if (isChristmasSeason(now)) {
+                return 0.00;
+            }
+            // 2. Ak ide o úplne nového používateľa -> 0.00 €
+            if (currentUser.isNewUser === true) {
+                return 0.00;
+            }
+            // 3. Inak plná suma
+            return 285.99;
+        }
+
+        function renderTariffs() {
+            if (!currentUser) return;
+            const price = getTariff9Price();
+            const priceDisplay = document.getElementById('tar9-price-display');
+            const buttonDisplay = document.getElementById('tar9-button-display');
+            if (!priceDisplay || !buttonDisplay) return;
+
+            if (price === 0.00) {
+                priceDisplay.innerHTML = `
+                    <div class="flex items-baseline">
+                        <span>0.00 €</span><span class="text-xs text-gray-500 font-normal ml-1">/ Prvý Rok</span>
+                    </div>
+                    <span class="text-[11px] text-green-400 font-normal mt-1">(Sezónna akcia / Promo pre nováčikov)</span>
+                `;
+                buttonDisplay.className = "w-full mt-6 py-2.5 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-black font-orbitron font-bold text-sm tracking-wide rounded-lg transition";
+                buttonDisplay.innerText = "AKTIVOVAŤ ZADARMO";
+                buttonDisplay.onclick = handleFreeActivation;
+            } else {
+                priceDisplay.innerHTML = `
+                    <div class="flex items-baseline">
+                        <span>285.99 €</span><span class="text-xs text-gray-500 font-normal ml-1">/ Ročne</span>
+                    </div>
+                    <span class="text-[11px] text-pink-400 font-normal mt-1">(Sviatky skončili a už nie ste nováčik)</span>
+                `;
+                buttonDisplay.className = "w-full mt-6 py-2.5 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 text-white font-orbitron font-bold text-sm tracking-wide rounded-lg transition";
+                buttonDisplay.innerText = "KÚPIŤ LICENCIU";
+                buttonDisplay.onclick = () => openPaymentGateway(9, '1 ROK BEZPLATNE', 285.99, 365);
             }
         }
 
@@ -1205,6 +1317,7 @@
                         amount: selectedTariffData.amount
                     };
                     currentUser.tariffExpiresAt = expirationTimestamp;
+                    currentUser.isNewUser = false; // Po prvej platbe už nie je novým používateľom
 
                     await saveUserToDB(currentUser);
 
@@ -1243,6 +1356,7 @@
                 amount: 0.00
             };
             currentUser.tariffExpiresAt = expirationTimestamp;
+            currentUser.isNewUser = false; // Po aktivácii proma už nie je novým používateľom
 
             await saveUserToDB(currentUser);
 
@@ -1261,6 +1375,7 @@
             createNoticeModal("PROMO AKTIVOVANÉ", `Prémiová licencia <strong>1 ROK BEZPLATNE</strong> bola aktivovaná na Vaše ID. Užite si neobmedzené nahrávanie a prehrávanie.<br><br>Platnosť do: <strong>${new Date(expirationTimestamp).toLocaleDateString('sk-SK')}</strong>.<br><br>Berte prosím na vedomie, že po roku táto bezplatná fáza končí a ďalšie predĺženie bude spoplatnené sumou <strong>285.99 €</strong>.`);
             
             await checkTariffAndRobotExpiration();
+            renderTariffs();
         }
 
         // DATABASE TRANSACTION LOGS WRITER
@@ -1604,10 +1719,17 @@
         }
 
         function toggleFullscreen() {
-            if (videoNode.requestFullscreen) {
-                videoNode.requestFullscreen();
-            } else if (videoNode.webkitRequestFullscreen) {
-                videoNode.webkitRequestFullscreen();
+            const playerWrapper = document.getElementById('video-player-wrapper');
+            if (!document.fullscreenElement) {
+                if (playerWrapper.requestFullscreen) {
+                    playerWrapper.requestFullscreen();
+                } else if (playerWrapper.webkitRequestFullscreen) {
+                    playerWrapper.webkitRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
             }
         }
 
