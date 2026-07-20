@@ -255,6 +255,12 @@
                     <!-- Flash tag if expired -->
                     <span id="security-alert-dot" class="absolute top-3.5 right-4 w-2 h-2 rounded-full bg-red-500 hidden animate-pulse"></span>
                 </button>
+                <!-- Gemini Assistant Button -->
+                <button onclick="navigate('gemini')" id="nav-gemini" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-orbitron text-gray-400 hover:text-white hover:bg-[#141226] border-l-2 border-transparent tracking-wide transition relative">
+                    <i class="fa-solid fa-wand-magic-sparkles w-5 text-center text-pink-400 animate-pulse"></i>
+                    <span>AI Film Asistent</span>
+                    <span class="absolute top-3.5 right-4 text-[8px] bg-pink-500/20 text-pink-300 px-1.5 py-0.5 rounded font-mono border border-pink-500/30">PRO</span>
+                </button>
             </nav>
 
             <!-- TERMINAL LOGOUT -->
@@ -431,12 +437,12 @@
                 </div>
 
                 <!-- Limits Alert banner -->
-            <div class="p-4 rounded-xl border border-cyan-500/20 bg-cyan-500/[0.03] flex items-center gap-3">
-                <i class="fa-solid fa-circle-info text-cyan-400 text-lg"></i>
-                <p class="text-xs text-gray-300">
-                    Keďže nepoužívame <code class="text-cyan-300 font-mono">localStorage</code>, ale <strong class="text-white">IndexedDB s priamym ukladaním streamu</strong>, môžete bez problémov vkladať reálne filmy a videá v desiatkach gigabajtov na základe voľného miesta na disku bez zahltenia RAM!
-                </p>
-            </div>
+                <div class="p-4 rounded-xl border border-cyan-500/20 bg-cyan-500/[0.03] flex items-center gap-3">
+                    <i class="fa-solid fa-circle-info text-cyan-400 text-lg"></i>
+                    <p class="text-xs text-gray-300">
+                        Keďže nepoužívame <code class="text-cyan-300 font-mono">localStorage</code>, ale <strong class="text-white">IndexedDB s priamym ukladaním streamu</strong>, môžete bez problémov vkladať reálne filmy a videá v desiatkach gigabajtov na základe voľného miesta na disku bez zahltenia RAM!
+                    </p>
+                </div>
 
                 <!-- Grid of saved videos -->
                 <div id="vault-media-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -452,7 +458,7 @@
                         <span>TARIFNÉ PRÍSTUPOVÉ KĽÚČE</span>
                     </h2>
                     <p class="text-sm text-gray-400 leading-relaxed">
-                        Získajte plný prístup ku kódovým kanálom. Vyberte si jeden z našich 9 prepracovaných balíkov. Ponúkame exkluzívny <strong class="text-cyan-400">PROMO balík na 1 Rok Zadarmo</strong> s plnými vymoženosťami!
+                        Získajte plný prístup ku kódovým kanálom a **Gemini AI asistentovi**. Vyberte si jeden z našich 9 prepracovaných balíkov. Ponúkame exkluzívny <strong class="text-cyan-400">PROMO balík na 1 Rok Zadarmo</strong> s plnými vymoženosťami!
                     </p>
                 </div>
 
@@ -474,7 +480,7 @@
                             <ul class="space-y-2.5 text-xs text-gray-400 border-t border-gray-800/80 pt-4">
                                 <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>Štandardné SD rozlíšenie</li>
                                 <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>Limit: Max 2 uploadované videá</li>
-                                <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>Lokálne ukladanie v IndexedDB</li>
+                                <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i><strong>Gemini AI: Max 5 dopytov</strong></li>
                             </ul>
                         </div>
                         <button onclick="openPaymentGateway(1, 'NEO BASIC', 2.99, 30)" class="w-full mt-6 py-2.5 bg-cyan-500/10 hover:bg-cyan-400 hover:text-black font-orbitron font-bold border border-cyan-500/30 hover:border-transparent text-cyan-400 text-sm tracking-wide rounded-lg transition">KÚPIŤ LICENCIU</button>
@@ -495,7 +501,7 @@
                             <ul class="space-y-2.5 text-xs text-gray-400 border-t border-gray-800/80 pt-4">
                                 <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>Full HD 1085p rozlíšenie</li>
                                 <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>Limit: Max 10 uploadovaných videí</li>
-                                <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>Vyššie prenosové rýchlosti</li>
+                                <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i><strong>Gemini AI: Max 15 dopytov</strong></li>
                             </ul>
                         </div>
                         <button onclick="openPaymentGateway(2, 'CYBER STREAM', 5.99, 30)" class="w-full mt-6 py-2.5 bg-cyan-500/10 hover:bg-cyan-400 hover:text-black font-orbitron font-bold border border-cyan-500/30 hover:border-transparent text-cyan-400 text-sm tracking-wide rounded-lg transition">KÚPIŤ LICENCIU</button>
@@ -517,7 +523,7 @@
                             <ul class="space-y-2.5 text-xs text-gray-400 border-t border-gray-800/80 pt-4">
                                 <li><i class="fa-solid fa-check text-pink-400 mr-2"></i>Ultra HD 4K kvalita</li>
                                 <li><i class="fa-solid fa-check text-pink-400 mr-2"></i>Limit: Max 50 veľkých videí</li>
-                                <li><i class="fa-solid fa-check text-pink-400 mr-2"></i>Prioritné spracovanie binárov</li>
+                                <li><i class="fa-solid fa-check text-pink-400 mr-2"></i><strong>Gemini AI: Max 30 dopytov</strong></li>
                             </ul>
                         </div>
                         <button onclick="openPaymentGateway(3, 'PLASMA ULTRA', 9.99, 30)" class="w-full mt-6 py-2.5 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 text-white font-orbitron font-bold text-sm tracking-wide rounded-lg transition">KÚPIŤ LICENCIU</button>
@@ -538,7 +544,7 @@
                             <ul class="space-y-2.5 text-xs text-gray-400 border-t border-gray-800/80 pt-4">
                                 <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>8K ultra-vysoké rozlíšenie</li>
                                 <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>Neobmedzené nahrávanie</li>
-                                <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>Odomknuté synaptické audio</li>
+                                <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i><strong>Gemini AI: NEOBMEDZENE</strong></li>
                             </ul>
                         </div>
                         <button onclick="openPaymentGateway(4, 'QUANTUM 8K', 14.99, 30)" class="w-full mt-6 py-2.5 bg-cyan-500/10 hover:bg-cyan-400 hover:text-black font-orbitron font-bold border border-cyan-500/30 hover:border-transparent text-cyan-400 text-sm tracking-wide rounded-lg transition">KÚPIŤ LICENCIU</button>
@@ -557,9 +563,9 @@
                                 <span>19.99 €</span><span class="text-xs text-gray-500 font-normal ml-1">/ Mesačne</span>
                             </div>
                             <ul class="space-y-2.5 text-xs text-gray-400 border-t border-gray-800/80 pt-4">
-                                <li><i class="fa-solidfa-check text-cyan-400 mr-2"></i>IMAX Enhanced audio-video</li>
+                                <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>IMAX Enhanced audio-video</li>
                                 <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>Dolby Spatializer procesor</li>
-                                <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>Neobmedzený trezor</li>
+                                <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i><strong>Gemini AI: NEOBMEDZENE</strong></li>
                             </ul>
                         </div>
                         <button onclick="openPaymentGateway(5, 'ORBITAL IMAX', 19.99, 30)" class="w-full mt-6 py-2.5 bg-cyan-500/10 hover:bg-cyan-400 hover:text-black font-orbitron font-bold border border-cyan-500/30 hover:border-transparent text-cyan-400 text-sm tracking-wide rounded-lg transition">KÚPIŤ LICENCIU</button>
@@ -580,7 +586,7 @@
                             <ul class="space-y-2.5 text-xs text-gray-400 border-t border-gray-800/80 pt-4">
                                 <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>Plná Ultra 4K/8K kvalita</li>
                                 <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>Zvýhodnená kvartálna sadzba</li>
-                                <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>Zdieľaný prístup: 2 terminály</li>
+                                <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i><strong>Gemini AI: NEOBMEDZENE</strong></li>
                             </ul>
                         </div>
                         <button onclick="openPaymentGateway(6, 'CHRONOS PASS', 29.99, 90)" class="w-full mt-6 py-2.5 bg-cyan-500/10 hover:bg-cyan-400 hover:text-black font-orbitron font-bold border border-cyan-500/30 hover:border-transparent text-cyan-400 text-sm tracking-wide rounded-lg transition">KÚPIŤ LICENCIU</button>
@@ -601,7 +607,7 @@
                             <ul class="space-y-2.5 text-xs text-gray-400 border-t border-gray-800/80 pt-4">
                                 <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>Uloženie nadrozmerných videosúborov</li>
                                 <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>Prémiové vizualizačné moduly</li>
-                                <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>Uložené dáta chránené prioritne</li>
+                                <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i><strong>Gemini AI: NEOBMEDZENE</strong></li>
                             </ul>
                         </div>
                         <button onclick="openPaymentGateway(7, 'GALAXY LEGACY', 49.99, 180)" class="w-full mt-6 py-2.5 bg-cyan-500/10 hover:bg-cyan-400 hover:text-black font-orbitron font-bold border border-cyan-500/30 hover:border-transparent text-cyan-400 text-sm tracking-wide rounded-lg transition">KÚPIŤ LICENCIU</button>
@@ -622,7 +628,7 @@
                             <ul class="space-y-2.5 text-xs text-gray-400 border-t border-gray-800/80 pt-4">
                                 <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>Celoročná bezstarostná prevádzka</li>
                                 <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>Najlepšia finančná úspora za rok</li>
-                                <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>Odomknuté experimentálne nástroje</li>
+                                <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i><strong>Gemini AI: NEOBMEDZENE</strong></li>
                             </ul>
                         </div>
                         <button onclick="openPaymentGateway(8, 'COSMOS INFINITY', 89.99, 365)" class="w-full mt-6 py-2.5 bg-cyan-500/10 hover:bg-cyan-400 hover:text-black font-orbitron font-bold border border-cyan-500/30 hover:border-transparent text-cyan-400 text-sm tracking-wide rounded-lg transition">KÚPIŤ LICENCIU</button>
@@ -644,7 +650,7 @@
                             <ul class="space-y-2.5 text-xs text-gray-400 border-t border-yellow-500/10 pt-4">
                                 <li><i class="fa-solid fa-check text-yellow-400 mr-2"></i>Plný Ultra 4K/8K prenos</li>
                                 <li><i class="fa-solid fa-check text-yellow-400 mr-2"></i>Úplne neobmedzené nahrávanie videí</li>
-                                <li><i class="fa-solid fa-check text-yellow-400 mr-2"></i>Platnosť presne 365 dní bez poplatku</li>
+                                <li><i class="fa-solid fa-check text-yellow-400 mr-2"></i><strong>Gemini AI: Max 20 dopytov</strong></li>
                             </ul>
                         </div>
                         <button id="tar9-button-display" onclick="handleFreeActivation()" class="w-full mt-6 py-2.5 text-black font-orbitron font-bold text-sm tracking-wide rounded-lg transition">
@@ -725,6 +731,123 @@
                                 <i class="fa-solid fa-rotate mr-1"></i> Regenerovať kód
                             </button>
                             <span id="captcha-feedback" class="text-xs font-orbitron text-gray-500">Čaká na vstup...</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 6. GEMINI AI FILM ASSISTANT VIEW -->
+            <section id="section-gemini" class="content-section p-6 space-y-6 hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    <!-- Sidebar: Info & suggestions -->
+                    <div class="lg:col-span-1 space-y-4">
+                        <div class="glass-panel border border-cyan-500/20 rounded-2xl p-4 space-y-4">
+                            <h3 class="font-orbitron font-extrabold text-cyan-400 text-xs tracking-wider flex items-center gap-2">
+                                <i class="fa-solid fa-chart-pie"></i>
+                                <span>KAPACITY MODELU</span>
+                            </h3>
+                            <!-- Quota Widget -->
+                            <div class="space-y-2">
+                                <div class="flex justify-between text-xs font-mono">
+                                    <span class="text-gray-400">Dopyty dňa:</span>
+                                    <span id="gemini-quota-text" class="text-white font-bold">0 / 0</span>
+                                </div>
+                                <div class="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
+                                    <div id="gemini-quota-bar" class="bg-gradient-to-r from-cyan-400 to-pink-500 h-full w-0 transition-all duration-300"></div>
+                                </div>
+                                <p class="text-[10px] text-gray-500 leading-relaxed">
+                                    Limity dopytov sú riadené Vašou aktívnou tarifou. Vyššie tarify majú neobmedzený prístup.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- API Key Entry Widget -->
+                        <div class="glass-panel border border-cyan-500/20 rounded-2xl p-4 space-y-3">
+                            <h3 class="font-orbitron font-extrabold text-cyan-400 text-xs tracking-wider flex items-center gap-2">
+                                <i class="fa-solid fa-key"></i>
+                                <span>PRÍSTUPOVÝ API KĽÚČ</span>
+                            </h3>
+                            <div class="space-y-2">
+                                <div class="relative">
+                                    <input type="password" id="gemini-api-key-input" class="w-full bg-[#141226] text-white rounded-lg pl-3 pr-8 py-2 text-xs border border-gray-800 focus:outline-none focus:border-cyan-400 font-mono" placeholder="Vložte AIzaSy...">
+                                    <button type="button" onclick="toggleApiKeyVisibility()" class="absolute right-2.5 top-2 text-gray-500 hover:text-cyan-400">
+                                        <i id="eye-icon" class="fa-solid fa-eye-slash text-xs"></i>
+                                    </button>
+                                </div>
+                                <button onclick="handleSaveApiKey()" class="w-full py-1.5 bg-cyan-500/10 hover:bg-cyan-400 hover:text-black font-orbitron font-bold border border-cyan-500/30 text-cyan-400 text-xs tracking-wide rounded transition">
+                                    ULOŽIŤ DO DATABÁZY
+                                </button>
+                                <p class="text-[9px] text-gray-500 leading-tight">
+                                    Váš kľúč sa uloží bezpečne a šifrovane iba u Vás v databáze IndexedDB, nikde sa neposiela.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- MODEL SELECTION WIDGET -->
+                        <div class="glass-panel border border-cyan-500/20 rounded-2xl p-4 space-y-3">
+                            <h3 class="font-orbitron font-extrabold text-cyan-400 text-xs tracking-wider flex items-center gap-2">
+                                <i class="fa-solid fa-microchip animate-pulse"></i>
+                                <span>NEURÁLNE JADRO (MODEL)</span>
+                            </h3>
+                            <div class="space-y-2">
+                                <select id="gemini-model-selector" class="w-full bg-[#141226] text-white rounded-lg px-2.5 py-2 text-xs border border-gray-800 focus:outline-none focus:border-cyan-400 font-orbitron tracking-wide transition">
+                                    <option value="gemini-2.5-flash" selected>Gemini 2.5 Flash</option>
+                                    <option value="gemini-3-flash">Gemini 3 Flash</option>
+                                </select>
+                                <p class="text-[9px] text-gray-500 leading-tight">
+                                    Gemini 3 Flash prináša pokročilejšie multimodálne uvažovanie a rýchlejšie odpovede.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Suggestions Panel -->
+                        <div class="glass-panel border border-gray-800 rounded-2xl p-4">
+                            <h4 class="font-orbitron text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Odporúčané dopyty</h4>
+                            <div class="flex flex-col gap-2">
+                                <button onclick="setGeminiPrompt('Kedy presne vyjde nový film Avatar 3 a aké sú o ňom doterajšie informácie?')" class="text-left text-xs p-2.5 bg-[#141226]/50 rounded border border-gray-800 hover:border-cyan-500/40 text-gray-300 hover:text-white transition">Kedy vyjde Avatar 3?</button>
+                                <button onclick="setGeminiPrompt('Aké veľké sci-fi a fantasy filmy vyjdú v druhej polovici roku 2026 a v roku 2027?')" class="text-left text-xs p-2.5 bg-[#141226]/50 rounded border border-gray-800 hover:border-cyan-500/40 text-gray-300 hover:text-white transition">Filmy v 2026/2027</button>
+                                <button onclick="setGeminiPrompt('Vyhľadaj aktuálny oficiálny dátum premiéry a najnovšie info o pokračovaní Dune: Part Three.')" class="text-left text-xs p-2.5 bg-[#141226]/50 rounded border border-gray-800 hover:border-cyan-500/40 text-gray-300 hover:text-white transition">Kedy bude Duna 3?</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chat Box Area -->
+                    <div class="lg:col-span-3 flex flex-col glass-panel border border-cyan-500/10 rounded-2xl h-[550px]">
+                        <!-- Chat Header -->
+                        <div class="p-4 border-b border-cyan-500/10 flex justify-between items-center bg-[#0c0a1a]">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                                    <i class="fa-solid fa-wand-magic-sparkles animate-pulse"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-orbitron font-bold text-sm text-white">GEMINI v3.1 SEARCH</h3>
+                                    <p class="text-[9px] text-green-400 font-mono tracking-wider">ONLINE REÁLNE VYHĽADÁVANIE AKTÍVNE</p>
+                                </div>
+                            </div>
+                            <button onclick="clearGeminiChat()" class="text-[10px] font-orbitron bg-red-500/10 hover:bg-red-500/20 text-red-400 px-2.5 py-1 rounded border border-red-500/20 transition">Vyčistiť chat</button>
+                        </div>
+
+                        <!-- Chat Messages Screen -->
+                        <div id="gemini-messages-box" class="flex-1 p-4 overflow-y-auto space-y-4">
+                            <!-- Init Welcome Message -->
+                            <div class="flex items-start gap-3">
+                                <div class="w-8 h-8 shrink-0 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400"><i class="fa-solid fa-robot"></i></div>
+                                <div class="p-3 bg-[#141226]/80 rounded-xl border border-gray-800/80 max-w-[85%] text-xs text-gray-300 space-y-1">
+                                    <p>Ahoj! Som tvoj filmový asistent **Gemini**.</p>
+                                    <p>Pýtaj sa ma na akékoľvek termíny vydania filmov, produkčné zmeny či kinematografické novinky. Vďaka online Google Search grounding ti dodám tie najčerstvejšie info.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Chat Input Block -->
+                        <div class="p-4 border-t border-cyan-500/10 bg-[#0c0a1a]">
+                            <form id="gemini-chat-form" onsubmit="handleGeminiSubmit(event)" class="flex gap-2.5">
+                                <input type="text" id="gemini-user-input" required class="flex-1 bg-[#141226] text-white rounded-lg px-4 py-3 border border-gray-800 focus:outline-none focus:border-cyan-400 text-sm" placeholder="Opýtaj sa na dátum vydania filmu (napr. Shrek 5)...">
+                                <button type="submit" id="gemini-send-btn" class="px-5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-orbitron font-bold rounded-lg text-xs tracking-wider transition flex items-center gap-1.5">
+                                    <span>VYHĽADAŤ</span>
+                                    <i class="fa-solid fa-paper-plane"></i>
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -994,7 +1117,8 @@
                     tariffExpiresAt: null,
                     // Auto-grant 24 hours of robot-check waiver upon sign up
                     lastCaptchaVerifiedAt: getSimulatedDate().getTime(),
-                    isNewUser: true
+                    isNewUser: true,
+                    geminiUsedCount: 0
                 };
 
                 await saveUserToDB(newUser);
@@ -1014,6 +1138,7 @@
 
         function loginUserSession(user) {
             currentUser = user;
+            currentUser.geminiUsedCount = currentUser.geminiUsedCount || 0;
             sessionStorage.setItem('cyber_user', user.username);
             
             // Switch views
@@ -1082,11 +1207,12 @@
                     const expiredId = currentUser.enrolledTariff.id;
                     currentUser.enrolledTariff = null;
                     currentUser.tariffExpiresAt = null;
+                    currentUser.geminiUsedCount = 0; // reset Gemini usage
                     updated = true;
                     
                     showNotification(`Vaša tarifa '${expiredName}' vypršala! Prístup bol zablokovaný.`, "error");
                     
-                    let expiredDetails = `Vaša tarifa <strong>${expiredName}</strong> práve oficiálne vypršala. Ak chcete pokračovať v streamovaní a nahrávaní súborov, musíte si kúpiť novú tarifu.`;
+                    let expiredDetails = `Vaša tarifa <strong>${expiredName}</strong> práve oficiálne vypršala. Ak chcete pokračovať v streamovaní, nahrávaní súborov a dopytovaní sa Gemini AI, musíte si kúpiť novú tarifu.`;
                     if (expiredId === 9) {
                         expiredDetails = `Vaša bezplatná promo tarifa <strong>1 ROK BEZPLATNE</strong> úspešne vypršala. Pre ďalšie pokračovanie v tomto neobmedzenom ročnom programe je teraz potrebné prejsť na platenú verziu v cene <strong>285.99 € / Rok</strong>, prípadne si zvoliť inú z našich mesačných taríf.`;
                     }
@@ -1178,6 +1304,13 @@
                 loadTransactionsHistory();
             } else if (sectionId === 'tariffs') {
                 renderTariffs();
+            } else if (sectionId === 'gemini') {
+                updateGeminiQuotaDisplay();
+                // Load saved API key from user profile
+                const apiKeyInput = document.getElementById('gemini-api-key-input');
+                if (apiKeyInput && currentUser) {
+                    apiKeyInput.value = currentUser.geminiApiKey || '';
+                }
             }
         }
 
@@ -1318,6 +1451,7 @@
                     };
                     currentUser.tariffExpiresAt = expirationTimestamp;
                     currentUser.isNewUser = false; // Po prvej platbe už nie je novým používateľom
+                    currentUser.geminiUsedCount = 0; // Reset Gemini limits upon new package purchase
 
                     await saveUserToDB(currentUser);
 
@@ -1357,6 +1491,7 @@
             };
             currentUser.tariffExpiresAt = expirationTimestamp;
             currentUser.isNewUser = false; // Po aktivácii proma už nie je novým používateľom
+            currentUser.geminiUsedCount = 0; // Reset limitov pre dopyty
 
             await saveUserToDB(currentUser);
 
@@ -1372,7 +1507,7 @@
             await recordTransactionInDB(tx);
             showNotification("Bezplatný ročný balík aktivovaný úspešne!", "success");
             
-            createNoticeModal("PROMO AKTIVOVANÉ", `Prémiová licencia <strong>1 ROK BEZPLATNE</strong> bola aktivovaná na Vaše ID. Užite si neobmedzené nahrávanie a prehrávanie.<br><br>Platnosť do: <strong>${new Date(expirationTimestamp).toLocaleDateString('sk-SK')}</strong>.<br><br>Berte prosím na vedomie, že po roku táto bezplatná fáza končí a ďalšie predĺženie bude spoplatnené sumou <strong>285.99 €</strong>.`);
+            createNoticeModal("PROMO AKTIVOVANÉ", `Prémiová licencia <strong>1 ROK BEZPLATNE</strong> bola aktivovaná na Vaše ID. Užite si neobmedzené nahrávanie, prehrávanie a **20 bezplatných dopytov** v AI asistentovi.<br><br>Platnosť do: <strong>${new Date(expirationTimestamp).toLocaleDateString('sk-SK')}</strong>.<br><br>Berte prosím na vedomie, že po roku táto bezplatná fáza končí a ďalšie predĺženie bude spoplatnené sumou <strong>285.99 €</strong>.`);
             
             await checkTariffAndRobotExpiration();
             renderTariffs();
@@ -1905,6 +2040,260 @@
                 document.getElementById('captcha-feedback').innerText = `Zosúladenie: ${captchaInput.length} / 4`;
                 document.getElementById('captcha-feedback').className = "text-xs font-orbitron text-yellow-400";
             }
+        }
+
+        // GEMINI AI INTEGRATION LOGIC
+        function getGeminiQuota() {
+            if (!currentUser || !currentUser.enrolledTariff) return 0;
+            const tId = currentUser.enrolledTariff.id;
+            if (tId === 1) return 5;
+            if (tId === 2) return 15;
+            if (tId === 3) return 30;
+            if (tId === 9) return 20; // Promo has 20 queries limit
+            return 999; // 4 to 8 are unlimited VIP plans
+        }
+
+        function updateGeminiQuotaDisplay() {
+            if (!currentUser) return;
+            const max = getGeminiQuota();
+            const used = currentUser.geminiUsedCount || 0;
+
+            const textNode = document.getElementById('gemini-quota-text');
+            const barNode = document.getElementById('gemini-quota-bar');
+
+            if (max === 999) {
+                textNode.innerText = `${used} / NEOBMEDZENE`;
+                barNode.style.width = `100%`;
+                barNode.className = "bg-gradient-to-r from-green-400 to-cyan-400 h-full w-full transition-all duration-300";
+            } else if (max === 0) {
+                textNode.innerText = `BLOKOVANÉ`;
+                barNode.style.width = `0%`;
+            } else {
+                const pct = Math.min(100, (used / max) * 100);
+                textNode.innerText = `${used} / ${max}`;
+                barNode.style.width = `${pct}%`;
+                if (pct > 80) {
+                    barNode.className = "bg-gradient-to-r from-red-500 to-pink-500 h-full transition-all duration-300";
+                } else {
+                    barNode.className = "bg-gradient-to-r from-cyan-400 to-blue-500 h-full transition-all duration-300";
+                }
+            }
+        }
+
+        function setGeminiPrompt(val) {
+            document.getElementById('gemini-user-input').value = val;
+            document.getElementById('gemini-user-input').focus();
+        }
+
+        function clearGeminiChat() {
+            const box = document.getElementById('gemini-messages-box');
+            box.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 shrink-0 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400"><i class="fa-solid fa-robot"></i></div>
+                    <div class="p-3 bg-[#141226]/80 rounded-xl border border-gray-800/80 max-w-[85%] text-xs text-gray-300 space-y-1">
+                        <p>Vyčistené. Opýtaj sa ma na ľubovoľné sci-fi novinky alebo filmové premiéry.</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function handleSaveApiKey() {
+            if (!currentUser) return;
+            const keyVal = document.getElementById('gemini-api-key-input').value.trim();
+            if (!keyVal) {
+                showNotification("Zadajte prosím platný API kľúč.", "warning");
+                return;
+            }
+
+            currentUser.geminiApiKey = keyVal;
+            saveUserToDB(currentUser).then(() => {
+                showNotification("API kľúč bol úspešne zapísaný do IndexedDB databázy.", "success");
+            }).catch(err => {
+                console.error("Zápis API kľúča zlyhal:", err);
+                showNotification("Chyba pri ukladaní kľúča.", "error");
+            });
+        }
+
+        function toggleApiKeyVisibility() {
+            const input = document.getElementById('gemini-api-key-input');
+            const icon = document.getElementById('eye-icon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fa-solid fa-eye text-xs';
+            } else {
+                input.type = 'password';
+                icon.className = 'fa-solid fa-eye-slash text-xs';
+            }
+        }
+
+        function parseMarkdown(text) {
+            return text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/`([^`]+)`/g, '<code class="bg-gray-800 px-1 py-0.5 rounded font-mono text-cyan-300">$1</code>')
+                .replace(/\n/g, '<br>');
+        }
+
+        async function handleGeminiSubmit(e) {
+            e.preventDefault();
+            if (!currentUser) return;
+
+            // Check if active plan exists
+            if (!currentUser.enrolledTariff) {
+                showNotification("Gemini vyžaduje aktívnu Tarifu! Zakúpte si balík.", "error");
+                navigate('tariffs');
+                return;
+            }
+
+            // Check if API Key has been saved
+            if (!currentUser.geminiApiKey) {
+                showNotification("Nemáte uložený API kľúč! Zadajte ho v ľavom paneli a uložte.", "warning");
+                return;
+            }
+
+            // Check limit dopytov
+            const max = getGeminiQuota();
+            const used = currentUser.geminiUsedCount || 0;
+            if (used >= max) {
+                showNotification("Dosiahli ste limit dopytov pre Váš balík!", "error");
+                createNoticeModal("LIMIT DOPYTOV DOSIAHNUTÝ", "Váš aktuálny limit na dopyty v AI asistentovi bol vyčerpaný. Ak chcete klásť neobmedzené otázky a využívať non-stop Google Search informácie o kinopremiérach, prejdite na vyššiu tarifu (napr. <strong>QUANTUM 8K</strong> alebo <strong>PLASMA ULTRA</strong>).");
+                return;
+            }
+
+            const inputEl = document.getElementById('gemini-user-input');
+            const queryText = inputEl.value.trim();
+            if (!queryText) return;
+
+            // Append user message to UI
+            appendGeminiMessage('user', queryText);
+            inputEl.value = '';
+
+            // Append loader bubble
+            const loaderId = appendGeminiLoader();
+
+            try {
+                const apiKey = currentUser.geminiApiKey;
+                const selectedModel = document.getElementById('gemini-model-selector').value || 'gemini-2.5-flash';
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
+                const systemPrompt = "Si pokročilý filmový AI asistent 'Gemini v4.2' integrovaný v platforme CYBER-STREAM. Tvojou hlavnou úlohou je vyhľadávať a poskytovať presné dátumy vydania (release dates) filmov, seriálov a herných titulov. VŽDY vyhľadávaj najaktuálnejšie informácie cez Google Search. Odpovedaj stručne, kybernetickým štýlom, výhradne v slovenčine a urob prehľadné zoznamy.";
+
+                const payload = {
+                    contents: [{ parts: [{ text: queryText }] }],
+                    tools: [{ "google_search": {} }],
+                    systemInstruction: {
+                        parts: [{ text: systemPrompt }]
+                    }
+                };
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    let errorDetails = `HTTP ${response.status}`;
+                    try {
+                        const errJson = await response.json();
+                        if (errJson.error && errJson.error.message) {
+                            errorDetails = errJson.error.message;
+                        }
+                    } catch (e) {}
+                    throw new Error(errorDetails);
+                }
+
+                const result = await response.json();
+                removeGeminiLoader(loaderId);
+                const candidate = result.candidates?.[0];
+
+                if (candidate && candidate.content?.parts?.[0]?.text) {
+                    const answerText = candidate.content.parts[0].text;
+
+                    // Extract sources if grounded
+                    let sources = [];
+                    const groundingMetadata = candidate.groundingMetadata;
+                    if (groundingMetadata && groundingMetadata.groundingAttributions) {
+                        sources = groundingMetadata.groundingAttributions
+                            .map(attr => ({
+                                uri: attr.web?.uri,
+                                title: attr.web?.title,
+                            }))
+                            .filter(s => s.uri && s.title);
+                    }
+
+                    // Increment and save quota in user object
+                    currentUser.geminiUsedCount = (currentUser.geminiUsedCount || 0) + 1;
+                    await saveUserToDB(currentUser);
+
+                    // Append model response
+                    appendGeminiMessage('model', answerText, sources);
+                    updateGeminiQuotaDisplay();
+                } else {
+                    appendGeminiMessage('model', "Nepodarilo sa vygenerovať odpoveď z Gemini AI. Skúste znova neskôr.");
+                }
+
+            } catch (err) {
+                console.error("Gemini prenos zlyhal:", err);
+                removeGeminiLoader(loaderId);
+                appendGeminiMessage('model', `Chyba prenosového AI protokolu: **${err.message}**. Uistite sa, že máte správne zadaný platný Gemini API kľúč, máte funkčné internetové pripojenie a Váš dopyt je v poriadku.`);
+            }
+        }
+
+        function appendGeminiMessage(sender, text, sources = []) {
+            const box = document.getElementById('gemini-messages-box');
+            const msgNode = document.createElement('div');
+            msgNode.className = "flex items-start gap-3";
+
+            const isUser = sender === 'user';
+            const avatarHtml = isUser 
+                ? `<div class="w-8 h-8 shrink-0 rounded-lg bg-pink-500/10 border border-pink-500/20 flex items-center justify-center text-pink-400"><i class="fa-solid fa-user-ninja"></i></div>`
+                : `<div class="w-8 h-8 shrink-0 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400"><i class="fa-solid fa-robot"></i></div>`;
+
+            let sourcesHtml = '';
+            if (sources.length > 0) {
+                sourcesHtml = `
+                    <div class="mt-2.5 pt-2 border-t border-gray-800/60 text-[10px] space-y-1">
+                        <span class="text-gray-500 uppercase font-orbitron block">Zdroje vyhľadávania:</span>
+                        <div class="flex flex-wrap gap-1.5">
+                            ${sources.map(s => `<a href="${s.uri}" target="_blank" class="px-1.5 py-0.5 bg-gray-800 rounded hover:bg-cyan-500/10 hover:text-cyan-400 text-gray-400 transition inline-block max-w-[200px] truncate">${s.title}</a>`).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            msgNode.innerHTML = `
+                ${avatarHtml}
+                <div class="p-3 ${isUser ? 'bg-pink-500/[0.03] border-pink-500/15' : 'bg-[#141226]/80 border-gray-800/80'} rounded-xl border max-w-[85%] text-xs text-gray-300">
+                    <div class="leading-relaxed whitespace-pre-line">${parseMarkdown(text)}</div>
+                    ${sourcesHtml}
+                </div>
+            `;
+
+            box.appendChild(msgNode);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function appendGeminiLoader() {
+            const box = document.getElementById('gemini-messages-box');
+            const loaderId = 'gemini-loader-' + Date.now();
+            const loadNode = document.createElement('div');
+            loadNode.id = loaderId;
+            loadNode.className = "flex items-start gap-3 animate-pulse";
+            loadNode.innerHTML = `
+                <div class="w-8 h-8 shrink-0 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400"><i class="fa-solid fa-robot animate-bounce"></i></div>
+                <div class="p-4 bg-[#141226]/80 rounded-xl border border-gray-800/80 text-xs text-gray-400 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-notch animate-spin text-cyan-400"></i>
+                    <span>Gemini prehľadáva online databázy a Google Search...</span>
+                </div>
+            `;
+            box.appendChild(loadNode);
+            box.scrollTop = box.scrollHeight;
+            return loaderId;
+        }
+
+        function removeGeminiLoader(id) {
+            const el = document.getElementById(id);
+            if (el) el.remove();
         }
 
         // TOAST NOTIFICATIONS CORE
