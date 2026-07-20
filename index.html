@@ -2126,6 +2126,52 @@
             }
         }
 
+        function getPageContext() {
+            if (!currentUser) return "Žiaden používateľ nie je prihlásený.";
+            const now = getSimulatedDate();
+            
+            // State of the video player
+            const activeVideo = currentPlaylist.find(v => v.id === activeVideoId);
+            const videoState = activeVideo ? {
+                nazov_videa: activeVideo.title,
+                subor: activeVideo.fileName,
+                velkost_suboru: activeVideo.fileSize,
+                aktualny_cas: formatTime(videoNode.currentTime),
+                celkovy_cas: formatTime(videoNode.duration),
+                rychlost: videoNode.playbackRate + "x",
+                je_pozastavene: videoNode.paused,
+                hlasitost: Math.round(videoNode.volume * 100) + "%"
+            } : "V prehrávači nie je momentálne spustené žiadne video.";
+
+            // Robot test status
+            const verifiedAge = now.getTime() - (currentUser.lastCaptchaVerifiedAt || 0);
+            const limit24H = 24 * 60 * 60 * 1000;
+            const isRobotBanned = verifiedAge > limit24H;
+            const robotStatus = isRobotBanned 
+                ? "ZABLOKOVANÝ (Používateľ musí na stránke vyriešiť overenie človeka v sekcii Robot overenie!)" 
+                : `OVERENÝ (Bezpečnostný waiver vyprší o cca ${Math.max(0, ((limit24H - verifiedAge) / (1000 * 60 * 60))).toFixed(1)} hodín)`;
+
+            // Loaded files lists in DB
+            const playlistTitles = currentPlaylist.map(v => `- ID #${v.id}: ${v.title} (${v.fileSize})`).join('\n') || "Knižnica trezoru je prázdna.";
+
+            return `
+=== AKTUÁLNY STAV STRÁNKY CYBER-STREAM (MÁŠ K NEMU PRIAMY VZHĽAD) ===
+- Prihlásený používateľ: ${currentUser.username.toUpperCase()}
+- Simulovaný dátum a čas na webe: ${now.toLocaleString('sk-SK')}
+- Aktívny tarifný balík: ${currentUser.enrolledTariff ? `${currentUser.enrolledTariff.name} (ID: ${currentUser.enrolledTariff.id}, Mesačná cena: ${currentUser.enrolledTariff.amount}€)` : "ŽIADNY AKTÍVNY BALÍK (Prehrávanie a nahrávanie je zablokované!)"}
+- Platnosť predplatného do: ${currentUser.tariffExpiresAt ? new Date(currentUser.tariffExpiresAt).toLocaleString('sk-SK') : "N/A"}
+- Stav ochrany pred robotmi (Neuro-test): ${robotStatus}
+- Aktuálne zobrazená podstránka/sekcia: ${activeNav.toUpperCase()}
+- Nahrané filmy a videá v ukladacom trezore (IndexedDB):
+${playlistTitles}
+- Aktuálny stav video prehrávača:
+${JSON.stringify(videoState, null, 2)}
+- Vybraté AI Jadro v menu: ${document.getElementById('gemini-model-selector')?.value || 'gemini-2.5-flash'}
+- Počet spotrebovaných dopytov pre AI: ${currentUser.geminiUsedCount || 0} z max ${getGeminiQuota() === 999 ? "Neobmedzene (VIP)" : getGeminiQuota()} dopytov.
+=========================================================
+`;
+        }
+
         function parseMarkdown(text) {
             return text
                 .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
@@ -2175,7 +2221,14 @@
                 const apiKey = currentUser.geminiApiKey;
                 const selectedModel = document.getElementById('gemini-model-selector').value || 'gemini-2.5-flash';
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
-                const systemPrompt = "Si pokročilý filmový AI asistent 'Gemini v4.2' integrovaný v platforme CYBER-STREAM. Tvojou hlavnou úlohou je vyhľadávať a poskytovať presné dátumy vydania (release dates) filmov, seriálov a herných titulov. VŽDY vyhľadávaj najaktuálnejšie informácie cez Google Search. Odpovedaj stručne, kybernetickým štýlom, výhradne v slovenčine a urob prehľadné zoznamy.";
+                
+                // Fetch dynamic page context right before transmitting
+                const pageLiveContext = getPageContext();
+                
+                const systemPrompt = `Si pokročilý filmový AI asistent 'Gemini v4.2' integrovaný v platforme CYBER-STREAM. Tvojou hlavnou úlohou je vyhľadávať a poskytovať presné dátumy vydania (release dates) filmov, seriálov a herných titulov. VŽDY vyhľadávaj najaktuálnejšie informácie cez Google Search. Odpovedaj stručne, kybernetickým štýlom, výhradne v slovenčine a urob prehľadné zoznamy.
+
+MÁŠ PLNOTUČNÝ REAL-TIME PRÍSTUP K AKTUÁLNEMU STAVU CELEJ STRÁNKY. Ak sa ťa používateľ spýta na jeho profil, nahrané videá v IndexedDB databáze, stav robotického overenia, simulovaný čas, alebo sa spýta "čo mám na webe urobiť / ako ďalej", analyzuj tieto poskytnuté dáta a poskytni mu perfektné, kyberneticky štylizované rady na mieru:
+${pageLiveContext}`;
 
                 const payload = {
                     contents: [{ parts: [{ text: queryText }] }],
