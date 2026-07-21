@@ -88,6 +88,12 @@
         input[type="range"].colorful-slider::-webkit-slider-thumb:hover {
             transform: scale(1.25);
         }
+        /* Ostré vykresľovanie videa bez rozmazania */
+        #cyber-video-node {
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+            transition: filter 0.2s ease;
+        }
         /* Modernizovaný beztrhavý Fullscreen pre prehravač */
         #video-player-wrapper:fullscreen {
             background-color: #020205 !important;
@@ -366,7 +372,18 @@
                                         </div>
                                     </div>
                                     <div id="player-title-marquee" class="text-xs text-gray-400 font-orbitron truncate max-w-[200px] sm:max-w-xs uppercase tracking-wider">Žiadny súbor</div>
-                                    <div class="flex items-center gap-3">
+                                    <div class="flex items-center gap-2">
+                                        <!-- Quality Selector (Platené v Tarife) -->
+                                        <select id="player-quality" onchange="changeQuality(this.value)" class="bg-[#141226]/80 text-xs border border-cyan-500/30 text-cyan-400 rounded px-1.5 py-0.5 font-mono focus:outline-none">
+                                            <option value="auto" selected>AUTO (Pôvodná)</option>
+                                            <option value="4320">8K Ultra</option>
+                                            <option value="2160">4K Ultra HD</option>
+                                            <option value="1080">1080p Full HD</option>
+                                            <option value="720">720p HD</option>
+                                            <option value="480">480p SD</option>
+                                            <option value="360">360p Low</option>
+                                        </select>
+                                        <!-- Speed Selector -->
                                         <select id="player-speed" onchange="changeSpeed(this.value)" class="bg-[#141226]/80 text-xs border border-cyan-500/30 text-cyan-400 rounded px-1.5 py-0.5 font-mono focus:outline-none">
                                             <option value="0.5">0.5x</option>
                                             <option value="1" selected>1.0x</option>
@@ -458,7 +475,7 @@
                         <span>TARIFNÉ PRÍSTUPOVÉ KĽÚČE</span>
                     </h2>
                     <p class="text-sm text-gray-400 leading-relaxed">
-                        Získajte plný prístup ku kódovým kanálom a **Gemini AI asistentovi**. Vyberte si jeden z našich 9 prepracovaných balíkov. Ponúkame exkluzívny <strong class="text-cyan-400">PROMO balík na 1 Rok Zadarmo</strong> s plnými vymoženosťami!
+                        Získajte plný prístup ku kódovým kanálom, **vysokej kvalite prenosu (4K / 8K)** a **Gemini AI asistentovi**. Vyberte si jeden z našich 9 prepracovaných balíkov. Ponúkame exkluzívny <strong class="text-cyan-400">PROMO balík na 1 Rok Zadarmo</strong> s plnými vymoženosťami!
                     </p>
                 </div>
 
@@ -478,7 +495,7 @@
                                 <span>2.99 €</span><span class="text-xs text-gray-500 font-normal ml-1">/ Mesačne</span>
                             </div>
                             <ul class="space-y-2.5 text-xs text-gray-400 border-t border-gray-800/80 pt-4">
-                                <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>Štandardné SD rozlíšenie</li>
+                                <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>Štandardné SD rozlíšenie (Max 480p)</li>
                                 <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>Limit: Max 2 uploadované videá</li>
                                 <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i><strong>Gemini AI: Max 5 dopytov</strong></li>
                             </ul>
@@ -499,7 +516,7 @@
                                 <span>5.99 €</span><span class="text-xs text-gray-500 font-normal ml-1">/ Mesačne</span>
                             </div>
                             <ul class="space-y-2.5 text-xs text-gray-400 border-t border-gray-800/80 pt-4">
-                                <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>Full HD 1085p rozlíšenie</li>
+                                <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>Full HD 1080p rozlíšenie</li>
                                 <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>Limit: Max 10 uploadovaných videí</li>
                                 <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i><strong>Gemini AI: Max 15 dopytov</strong></li>
                             </ul>
@@ -521,7 +538,7 @@
                                 <span>9.99 €</span><span class="text-xs text-gray-500 font-normal ml-1">/ Mesačne</span>
                             </div>
                             <ul class="space-y-2.5 text-xs text-gray-400 border-t border-gray-800/80 pt-4">
-                                <li><i class="fa-solid fa-check text-pink-400 mr-2"></i>Ultra HD 4K kvalita</li>
+                                <li><i class="fa-solid fa-check text-pink-400 mr-2"></i>Ultra HD 4K kvalita (2160p)</li>
                                 <li><i class="fa-solid fa-check text-pink-400 mr-2"></i>Limit: Max 50 veľkých videí</li>
                                 <li><i class="fa-solid fa-check text-pink-400 mr-2"></i><strong>Gemini AI: Max 30 dopytov</strong></li>
                             </ul>
@@ -563,7 +580,7 @@
                                 <span>19.99 €</span><span class="text-xs text-gray-500 font-normal ml-1">/ Mesačne</span>
                             </div>
                             <ul class="space-y-2.5 text-xs text-gray-400 border-t border-gray-800/80 pt-4">
-                                <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>IMAX Enhanced audio-video</li>
+                                <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>IMAX Enhanced 8K kvalita</li>
                                 <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>Dolby Spatializer procesor</li>
                                 <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i><strong>Gemini AI: NEOBMEDZENE</strong></li>
                             </ul>
@@ -605,7 +622,7 @@
                                 <span>49.99 €</span><span class="text-xs text-gray-500 font-normal ml-1">/ 6 Mesiacov</span>
                             </div>
                             <ul class="space-y-2.5 text-xs text-gray-400 border-t border-gray-800/80 pt-4">
-                                <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>Uloženie nadrozmerných videosúborov</li>
+                                <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>Plná Ultra 8K kvalita obrazu</li>
                                 <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>Prémiové vizualizačné moduly</li>
                                 <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i><strong>Gemini AI: NEOBMEDZENE</strong></li>
                             </ul>
@@ -626,7 +643,7 @@
                                 <span>89.99 €</span><span class="text-xs text-gray-500 font-normal ml-1">/ Ročne</span>
                             </div>
                             <ul class="space-y-2.5 text-xs text-gray-400 border-t border-gray-800/80 pt-4">
-                                <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>Celoročná bezstarostná prevádzka</li>
+                                <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>Maximálna 8K / IMAX kvalita</li>
                                 <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i>Najlepšia finančná úspora za rok</li>
                                 <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i><strong>Gemini AI: NEOBMEDZENE</strong></li>
                             </ul>
@@ -648,7 +665,7 @@
                                 <!-- Dynamicky renderované cez renderTariffs() -->
                             </div>
                             <ul class="space-y-2.5 text-xs text-gray-400 border-t border-yellow-500/10 pt-4">
-                                <li><i class="fa-solid fa-check text-yellow-400 mr-2"></i>Plný Ultra 4K/8K prenos</li>
+                                <li><i class="fa-solid fa-check text-yellow-400 mr-2"></i>Plný Ultra 4K prenos</li>
                                 <li><i class="fa-solid fa-check text-yellow-400 mr-2"></i>Úplne neobmedzené nahrávanie videí</li>
                                 <li><i class="fa-solid fa-check text-yellow-400 mr-2"></i><strong>Gemini AI: Max 20 dopytov</strong></li>
                             </ul>
@@ -1774,6 +1791,57 @@
             }
         });
 
+        // KVALITA ZVIERANÁ TARIFNÝM BALÍKOM
+        function getMaxQualityAllowedForTariff() {
+            if (!currentUser || !currentUser.enrolledTariff) return 360;
+            const tId = currentUser.enrolledTariff.id;
+            if (tId === 1) return 480;   // NEO BASIC: Max SD (480p)
+            if (tId === 2) return 1080;  // CYBER STREAM: Max Full HD (1080p)
+            if (tId === 3 || tId === 9) return 2160; // PLASMA ULTRA & PROMO: Max 4K (2160p)
+            return 4320; // Tarify 4 až 8 maji neobmedzenú 8K kvalitu
+        }
+
+        function changeQuality(val) {
+            const maxAllowed = getMaxQualityAllowedForTariff();
+            const qualitySelect = document.getElementById('player-quality');
+            
+            let requestedVal = val === 'auto' ? 4320 : parseInt(val);
+
+            // Ak používateľ zvolí kvalitu, ktorú jeho balík nedovoľuje
+            if (requestedVal > maxAllowed) {
+                let requiredTariffName = "CYBER STREAM (1080p)";
+                if (requestedVal > 1080) requiredTariffName = "PLASMA ULTRA (4K)";
+                if (requestedVal > 2160) requiredTariffName = "QUANTUM 8K (8K)";
+
+                showNotification(`Kvalita zablokovaná! Vaša tarifa dovoľuje max ${maxAllowed}p. Pre túto kvalitu vyžadovaný balík ${requiredTariffName}.`, "error");
+                
+                // Vrátime nastavenie na max povolenú kvalitu pre jeho tarifu
+                if (maxAllowed === 480) qualitySelect.value = "480";
+                else if (maxAllowed === 1080) qualitySelect.value = "1080";
+                else if (maxAllowed === 2160) qualitySelect.value = "2160";
+                else qualitySelect.value = "auto";
+
+                applyVideoQualityFilter(maxAllowed);
+                return;
+            }
+
+            applyVideoQualityFilter(requestedVal);
+            showNotification(`Nastavený režim kvality: ${val === 'auto' ? 'AUTO (Pôvodná ostrá kvalita)' : val + 'p'}`, "info");
+        }
+
+        function applyVideoQualityFilter(qualityRes) {
+            // Aplikácia optického filtru bez rozmazania pre vysoké rozlíšenia
+            if (qualityRes >= 1080) {
+                videoNode.style.filter = "blur(0px) contrast(102%)";
+            } else if (qualityRes === 720) {
+                videoNode.style.filter = "blur(0.5px) contrast(100%)";
+            } else if (qualityRes === 480) {
+                videoNode.style.filter = "blur(1.5px) contrast(98%)";
+            } else {
+                videoNode.style.filter = "blur(2.8px) contrast(95%)";
+            }
+        }
+
         function playMedia(id) {
             // Guard with security Robot state
             const now = getSimulatedDate().getTime();
@@ -1807,6 +1875,10 @@
             // Display title
             marqueeTitle.innerText = target.title.toUpperCase();
             
+            // Auto check quality permissions according to current tariff
+            const currentSelectedQual = document.getElementById('player-quality').value;
+            changeQuality(currentSelectedQual);
+
             videoNode.play();
             playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
             showNotification(`Prehrávam: ${target.title}`, "success");
@@ -1882,14 +1954,18 @@
             visualizerCanvas = document.getElementById('canvas-visualizer');
             visualizerCtx = visualizerCanvas.getContext('2d');
             
-            // Resize canvas safely
-            visualizerCanvas.width = visualizerCanvas.offsetWidth;
-            visualizerCanvas.height = visualizerCanvas.offsetHeight;
+            // Device Pixel Ratio scaling pre ostré vykreslenie spektrometra bez rozmazania
+            const dpr = window.devicePixelRatio || 1;
+            visualizerCanvas.width = visualizerCanvas.offsetWidth * dpr;
+            visualizerCanvas.height = visualizerCanvas.offsetHeight * dpr;
+            visualizerCtx.scale(dpr, dpr);
 
             window.addEventListener('resize', () => {
                 if (visualizerCanvas) {
-                    visualizerCanvas.width = visualizerCanvas.offsetWidth;
-                    visualizerCanvas.height = visualizerCanvas.offsetHeight;
+                    const dpr = window.devicePixelRatio || 1;
+                    visualizerCanvas.width = visualizerCanvas.offsetWidth * dpr;
+                    visualizerCanvas.height = visualizerCanvas.offsetHeight * dpr;
+                    visualizerCtx.scale(dpr, dpr);
                 }
             });
 
@@ -1899,8 +1975,8 @@
         function drawVisualizer() {
             visualizerAnimationId = requestAnimationFrame(drawVisualizer);
             
-            const w = visualizerCanvas.width;
-            const h = visualizerCanvas.height;
+            const w = visualizerCanvas.offsetWidth;
+            const h = visualizerCanvas.offsetHeight;
             
             // Background fill
             visualizerCtx.fillStyle = '#0a0914';
